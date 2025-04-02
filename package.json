@@ -1,0 +1,39 @@
+{
+  "name": "v2h1",
+  "version": "1.0.0",
+  "description": "h1v2vef",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "live-server", 
+    "start": "live-server",
+    "lint": "eslint . && stylelint 'sass/**/*.scss'",
+    "sass": "sass --watch sass/main.scss:css/main.css",
+    "build": "sass sass/main.scss:css/main.css --style=compressed",
+    "fix-line-endings": "node scripts/fix-line-endings.js",
+    "fix": "eslint --fix js/**/*.js && stylelint --fix 'sass/**/*.scss'"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ManiEids/h1v2.25.git"
+  },
+  "keywords": [
+    "vefforritun"
+  ],
+  "author": "Máni Eiðs",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ManiEids/h1v2.25/issues"
+  },
+  "homepage": "https://github.com/ManiEids/h1v2.25#readme",
+  "devDependencies": {
+    "eslint": "^8.56.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-plugin-import": "^2.29.1",
+    "prettier": "^3.5.3",
+    "sass": "^1.85.1",
+    "stylelint": "^16.15.0",
+    "stylelint-config-sass-guidelines": "^12.1.0",
+    "stylelint-config-standard": "^37.0.0"
+  }
+}

@@ -1,0 +1,411 @@
+// Import the color module at the top of the file
+@use "sass:color";
+
+// Variables
+$primary-color: #3498db;
+$secondary-color: #2c3e50;
+$background-color: #f5f5f5;
+$text-color: #333;
+$border-color: #ddd;
+$danger-color: #e74c3c;
+$success-color: #2ecc71;
+$priority-color: #f39c12;
+
+$breakpoint-mobile: 400px;
+$breakpoint-tablet: 768px;
+$breakpoint-desktop: 1000px;
+
+// Reset
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  line-height: 1.6;
+  color: $text-color;
+  background-color: $background-color;
+}
+
+a {
+  text-decoration: none;
+  color: $primary-color;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 16px;
+  font-size: 14px;
+}
+
+ul {
+  list-style: none;
+}
+
+// Layout
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 15px;
+}
+
+.header {
+  background-color: $primary-color;
+  color: white;
+  padding: 15px 0;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+
+  h1 {
+    font-size: 24px;
+    margin: 0;
+  }
+}
+
+.main {
+  padding: 20px 0;
+}
+
+.app {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+
+  @media (min-width: $breakpoint-tablet) {
+    flex-direction: row;
+  }
+}
+
+// Sidebar
+.sidebar {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 15px;
+  width: 100%;
+
+  @media (min-width: $breakpoint-tablet) {
+    width: 250px;
+    flex-shrink: 0;
+    align-self: flex-start;
+  }
+}
+
+.navigation {
+  .nav-list {
+    li {
+      margin-bottom: 10px;
+    }
+  }
+
+  .nav-link {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 12px;
+    border-radius: 4px;
+    color: $text-color;
+
+    &:hover {
+      background-color: rgba($primary-color, 0.1);
+      text-decoration: none;
+    }
+
+    &.active {
+      background-color: $primary-color;
+      color: white;
+    }
+  }
+
+  .count {
+    background-color: rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+    padding: 2px 8px;
+    font-size: 12px;
+  }
+
+  .nav-section {
+    margin-top: 20px;
+
+    h3 {
+      font-size: 16px;
+      margin-bottom: 10px;
+      color: $secondary-color;
+      border-bottom: 1px solid $border-color;
+      padding-bottom: 5px;
+    }
+
+    .sub-nav {
+      margin-left: 8px;
+    }
+  }
+}
+
+// Content
+.content {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.toolbar {
+  background-color: white;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+
+  select, input {
+    padding: 6px;
+    border: 1px solid $border-color;
+    border-radius: 4px;
+  }
+}
+
+// Tasks
+#tasks-container {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 15px;
+  min-height: 300px;
+}
+
+.loading-state, .error-state, .empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 30px;
+  text-align: center;
+  color: $secondary-color;
+  gap: 15px;
+}
+
+.hidden {
+  display: none;
+}
+
+.task-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 15px;
+  border-bottom: 1px solid $border-color;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &.priority {
+    border-left: 4px solid $priority-color;
+    padding-left: 11px;
+  }
+}
+
+.task-content {
+  display: flex;
+  gap: 15px;
+  flex-grow: 1;
+}
+
+.task-checkbox-wrapper {
+  padding-top: 3px;
+}
+
+.task-checkbox {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.task-info {
+  flex-grow: 1;
+}
+
+.task-title {
+  font-size: 18px;
+  margin-bottom: 5px;
+}
+
+.task-description {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 10px;
+}
+
+.task-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 12px;
+}
+
+.due-date, .category {
+  padding: 3px 8px;
+  border-radius: 4px;
+  background-color: rgba($primary-color, 0.1);
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.tag {
+  background-color: rgba($secondary-color, 0.1);
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.task-actions {
+  .edit-btn {
+    background-color: transparent;
+    color: $primary-color;
+
+    &:hover {
+      background-color: rgba($primary-color, 0.1);
+    }
+  }
+}
+
+.add-task-button {
+  background-color: $primary-color;
+  color: white;
+  padding: 10px 20px;
+  align-self: flex-end;
+  margin-top: 15px;
+  font-weight: bold;
+
+  &:hover {
+    // Replace darken() with color.adjust()
+    background-color: color.adjust($primary-color, $lightness: -10%);
+  }
+}
+
+// Modal
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+  width: 90%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  border-bottom: 1px solid $border-color;
+
+  h2 {
+    margin: 0;
+    font-size: 20px;
+  }
+
+  .close-button {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #666;
+    padding: 0;
+  }
+}
+
+// Form
+form {
+  padding: 20px;
+}
+
+.form-group {
+  margin-bottom: 15px;
+
+  label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+  }
+
+  input[type="text"], 
+  input[type="date"], 
+  select, 
+  textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid $border-color;
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: 14px;
+  }
+
+  textarea {
+    min-height: 100px;
+    resize: vertical;
+  }
+
+  &.checkbox {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    input {
+      width: auto;
+    }
+
+    label {
+      margin: 0;
+    }
+  }
+}
+
+.form-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 20px;
+
+  .save-btn {
+    background-color: $primary-color;
+    color: white;
+  }
+
+  .delete-btn {
+    background-color: $danger-color;
+    color: white;
+  }
+
+  .cancel-btn {
+    background-color: #ccc;
+    color: $text-color;
+  }
+}

@@ -1,0 +1,21 @@
+# Dependency directories
+node_modules/
+
+# Compiled CSS
+/css
+
+# Environment variables
+.env
+
+# Editor directories and files
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS specific
+.DS_Store
+Thumbs.db

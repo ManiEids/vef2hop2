@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="is">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verkefnalisti</title>
+  <link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+  <header class="header">
+    <div class="container">
+      <h1>Verkefnalisti</h1>
+    </div>
+  </header>
+
+  <main class="main">
+    <div class="container">
+      <div class="app">
+        <aside class="sidebar">
+          <nav class="navigation">
+            <ul class="nav-list">
+              <li><a href="#" data-filter="all" class="nav-link active">Verkefni <span class="count" id="all-count">0</span></a></li>
+              <li><a href="#" data-filter="completed" class="nav-link">Kláruð verkefni <span class="count" id="completed-count">0</span></a></li>
+              
+              <li class="nav-section">
+                <h3>Flokkar</h3>
+                <ul class="sub-nav" id="categories-list">
+                  <!-- Categories will be inserted here by JavaScript -->
+                  <li class="loading">Hleður flokkum...</li>
+                </ul>
+              </li>
+              
+              <li class="nav-section">
+                <h3>Tags</h3>
+                <ul class="sub-nav" id="tags-list">
+                  <!-- Tags will be inserted here by JavaScript -->
+                  <li class="loading">Hleður töggum...</li>
+                </ul>
+              </li>
+            </ul>
+          </nav>
+        </aside>
+
+        <div class="content">
+          <div class="toolbar">
+            <div class="sort-options">
+              <label for="sort-select">Raða eftir:</label>
+              <select id="sort-select">
+                <option value="title">Titli</option>
+                <option value="due">Skiladegi</option>
+                <option value="priority">Forgangi</option>
+              </select>
+            </div>
+          </div>
+
+          <div id="tasks-container">
+            <div class="loading-state" id="loading-state">
+              <p>Hleður verkefnum...</p>
+            </div>
+            <div class="error-state hidden" id="error-state">
+              <p>Villa kom upp við að sækja verkefni.</p>
+              <button id="retry-button">Reyna aftur</button>
+            </div>
+            <div class="empty-state hidden" id="empty-state">
+              <p>Engin verkefni fundust.</p>
+            </div>
+            <div class="tasks-list hidden" id="tasks-list">
+              <!-- Tasks will be inserted here by JavaScript -->
+            </div>
+          </div>
+
+          <button class="add-task-button" id="add-task-button">Nýtt verkefni</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <div class="modal hidden" id="task-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modal-title">Breyta verkefni</h2>
+        <button class="close-button" id="close-modal">&times;</button>
+      </div>
+      <form id="task-form">
+        <input type="hidden" id="task-id">
+        <div class="form-group">
+          <label for="title">Titill:</label>
+          <input type="text" id="title" required>
+        </div>
+        <div class="form-group">
+          <label for="description">Lýsing:</label>
+          <textarea id="description"></textarea>
+        </div>
+        <div class="form-group">
+          <label for="due-date">Lokadagur:</label>
+          <input type="date" id="due-date">
+        </div>
+        <div class="form-group">
+          <label for="category">Flokkur:</label>
+          <select id="category">
+            <option value="">-- Veldu flokk --</option>
+            <!-- Categories will be added here by JavaScript -->
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="tags">Tags (aðskilin með bili):</label>
+          <input type="text" id="tags">
+        </div>
+        <div class="form-group checkbox">
+          <input type="checkbox" id="priority">
+          <label for="priority">Forgangur</label>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn save-btn">Vista</button>
+          <button type="button" class="btn delete-btn" id="delete-task">Eyða</button>
+          <button type="button" class="btn cancel-btn" id="cancel-edit">Hætta við</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
