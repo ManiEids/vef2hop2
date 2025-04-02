@@ -1,0 +1,7 @@
+{
+  "/page": "app/page.js",
+  "/verkefni/page": "app/verkefni/page.js",
+  "/innskraning/page": "app/innskraning/page.js",
+  "/um-okkur/page": "app/um-okkur/page.js",
+  "/nyskraning/page": "app/nyskraning/page.js"
+}
