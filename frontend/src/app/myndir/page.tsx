@@ -29,6 +29,10 @@ export default function ImagesPage() {
   const [customPreset, setCustomPreset] = useState("");
   const [showCustomPreset, setShowCustomPreset] = useState(false);
 
+  const [page, setPage] = useState(1);
+  const [imagesPerPage, setImagesPerPage] = useState(12);
+  const [viewMode, setViewMode] = useState<"scroll" | "paginate">("scroll");
+
   const { user } = useAuth();
 
   useEffect(() => {
@@ -49,6 +53,7 @@ export default function ImagesPage() {
       });
 
       setImages(sortedImages);
+      console.log(`Sækja myndir: ${sortedImages.length} einstakar myndir fundust`);
     } catch (err: any) {
       console.error("Villa við að sækja myndir:", err);
       setImageError("Villa við að sækja myndir");
@@ -161,6 +166,11 @@ export default function ImagesPage() {
       if (setCopiedUrl) setCopiedUrl("");
     }, 2000);
   };
+
+  const totalPages = Math.ceil(images.length / imagesPerPage);
+  const paginatedImages = viewMode === "paginate" 
+    ? images.slice((page - 1) * imagesPerPage, page * imagesPerPage)
+    : images;
 
   if (!user) {
     return (
@@ -287,33 +297,47 @@ export default function ImagesPage() {
       <div className="bg-white p-6 rounded-lg shadow-md">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold">Allar myndir</h2>
-          <button
-            onClick={fetchImages}
-            className="bg-blue-500 hover:bg-blue-600 text-white text-sm px-3 py-1 rounded-md flex items-center gap-1"
-            disabled={loadingImages}
-          >
-            {loadingImages ? (
-              "Uppfæri..."
-            ) : (
-              <>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-4 w-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                  />
-                </svg>
-                Uppfæra
-              </>
-            )}
-          </button>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center">
+              <label htmlFor="viewMode" className="text-sm mr-2">Sýna sem:</label>
+              <select 
+                id="viewMode"
+                value={viewMode}
+                onChange={(e) => setViewMode(e.target.value as "scroll" | "paginate")}
+                className="text-sm bg-gray-100 border border-gray-300 rounded px-2 py-1"
+              >
+                <option value="scroll">Skruna</option>
+                <option value="paginate">Síður</option>
+              </select>
+            </div>
+            <button
+              onClick={fetchImages}
+              className="bg-blue-500 hover:bg-blue-600 text-white text-sm px-3 py-1 rounded-md flex items-center gap-1"
+              disabled={loadingImages}
+            >
+              {loadingImages ? (
+                "Uppfæri..."
+              ) : (
+                <>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-4 w-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                    />
+                  </svg>
+                  Uppfæra
+                </>
+              )}
+            </button>
+          </div>
         </div>
 
         {imageError && (
@@ -331,12 +355,22 @@ export default function ImagesPage() {
         ) : (
           <>
             <div className="mb-4 text-sm text-gray-500">
-              <p>Sýni {images.length} myndir, nýjustu efst</p>
+              <p>
+                {viewMode === "paginate" 
+                  ? `Sýni ${Math.min(paginatedImages.length, imagesPerPage)} af ${images.length} myndum (síða ${page}/${totalPages})` 
+                  : `Sýni allar ${images.length} myndir, nýjustu efst`}
+              </p>
             </div>
-            {/* Adjusted the container to properly handle scrolling with a fixed max-height */}
-            <div className="overflow-y-auto" style={{ maxHeight: "70vh" }}>
+            
+            <div 
+              className="overflow-y-auto" 
+              style={{ 
+                maxHeight: viewMode === "scroll" ? "70vh" : "auto",
+                scrollBehavior: "smooth"
+              }}
+            >
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {images.map((image) => (
+                {paginatedImages.map((image) => (
                   <div key={image.public_id} className="bg-gray-100 p-3 rounded-lg">
                     <div className="relative h-40 mb-2 bg-white rounded overflow-hidden">
                       <Image
@@ -369,6 +403,68 @@ export default function ImagesPage() {
                 ))}
               </div>
             </div>
+            
+            {viewMode === "paginate" && totalPages > 1 && (
+              <div className="mt-6 flex justify-center">
+                <div className="flex items-center gap-2">
+                  <button 
+                    onClick={() => setPage(p => Math.max(1, p - 1))}
+                    disabled={page === 1}
+                    className="px-3 py-1 bg-gray-200 rounded-md disabled:opacity-50"
+                  >
+                    Fyrri
+                  </button>
+                  
+                  <div className="flex items-center gap-1 mx-2">
+                    {Array.from({length: Math.min(5, totalPages)}, (_, i) => {
+                      let pageNum;
+                      if (totalPages <= 5) {
+                        pageNum = i + 1;
+                      } else if (page <= 3) {
+                        pageNum = i + 1;
+                      } else if (page >= totalPages - 2) {
+                        pageNum = totalPages - 4 + i;
+                      } else {
+                        pageNum = page - 2 + i;
+                      }
+                      
+                      return (
+                        <button
+                          key={i}
+                          onClick={() => setPage(pageNum)}
+                          className={`w-8 h-8 rounded-md ${
+                            page === pageNum 
+                              ? "bg-blue-500 text-white" 
+                              : "bg-gray-200"
+                          }`}
+                        >
+                          {pageNum}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  
+                  <button 
+                    onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                    disabled={page === totalPages}
+                    className="px-3 py-1 bg-gray-200 rounded-md disabled:opacity-50"
+                  >
+                    Næsta
+                  </button>
+                </div>
+              </div>
+            )}
+            
+            {viewMode === "scroll" && images.length > 12 && (
+              <div className="mt-4 text-center">
+                <button 
+                  onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                  className="text-blue-500 hover:underline text-sm"
+                >
+                  Fara efst á síðu
+                </button>
+              </div>
+            )}
           </>
         )}
       </div>

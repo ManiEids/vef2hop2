@@ -322,32 +322,67 @@ export const CloudinaryService = {
     const cloudName = "dojqamm7u";
     
     try {
-      // Prófa fyrst að sækja beint frá Cloudinary API
-      const url = `https://res.cloudinary.com/${cloudName}/image/list/${folder || 'verkefnalisti-mana'}.json`;
+      // Try to get all images directly from Cloudinary API using next_cursor for pagination
+      const getAllImages = async () => {
+        let allResources: any[] = [];
+        let hasMore = true;
+        let nextCursor = undefined;
+        
+        while (hasMore) {
+          try {
+            // Build the URL with cursor if available
+            let url = `https://res.cloudinary.com/${cloudName}/image/list/${folder || 'verkefnalisti-mana'}.json`;
+            if (nextCursor) {
+              url += `?next_cursor=${nextCursor}`;
+            }
+            
+            const response = await fetch(url);
+            
+            if (response.ok) {
+              const data = await response.json();
+              allResources = [...allResources, ...data.resources];
+              
+              // Check if there are more pages
+              if (data.next_cursor) {
+                nextCursor = data.next_cursor;
+              } else {
+                hasMore = false;
+              }
+            } else {
+              // If we get an error, stop trying to fetch more
+              hasMore = false;
+            }
+          } catch (error) {
+            console.log("Error fetching images page:", error);
+            hasMore = false;
+          }
+        }
+        
+        return allResources;
+      };
       
       try {
-        const response = await fetch(url);
+        const allResources = await getAllImages();
         
-        if (response.ok) {
-          const data = await response.json();
-          console.log("Sótti myndir frá Cloudinary:", data.resources.length);
+        if (allResources.length > 0) {
+          console.log(`Fetched ${allResources.length} images from Cloudinary`);
           
-          // Format fyrir samkvæmni
+          // Format for consistency
           return {
-            resources: data.resources.map((resource: any) => ({
+            resources: allResources.map((resource: any) => ({
               public_id: resource.public_id,
               secure_url: `https://res.cloudinary.com/${cloudName}/image/upload/${resource.public_id}.${resource.format}`,
               format: resource.format,
-              created_at: new Date().toISOString()
+              created_at: resource.created_at || new Date().toISOString()
             }))
           };
         }
       } catch (error) {
-        console.log("Villa við að sækja myndir beint frá Cloudinary, nota mock");
+        console.log("Failed to fetch images directly from Cloudinary, using mock");
       }
       
-      // Ef Cloudinary API svar mistekst, notum mock
-      // Söfnum öllum mögulegum myndum og fjarlægjum tvítekningar
+      // If Cloudinary API fails, use mock
+      // Collect all possible images and remove duplicates
       const allImages = new Map<string, CloudinaryImage>();
       
       // Sækja verkefni sem innihalda myndir

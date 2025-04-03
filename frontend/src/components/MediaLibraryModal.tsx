@@ -35,11 +35,17 @@ export default function MediaLibraryModal({
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(false);
+
+  // View mode and pagination states
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [page, setPage] = useState(1);
+  const [imagesPerPage, setImagesPerPage] = useState(12);
   
   // Fetch images from Cloudinary when modal opens
   useEffect(() => {
     if (isOpen) {
       fetchImages();
+      setPage(1);
     }
   }, [isOpen]);
   
@@ -151,6 +157,10 @@ export default function MediaLibraryModal({
       setUploading(false);
     }
   };
+
+  // Calculate pagination
+  const totalPages = Math.ceil(images.length / imagesPerPage);
+  const paginatedImages = images.slice((page - 1) * imagesPerPage, page * imagesPerPage);
   
   if (!isOpen) return null;
   
@@ -219,37 +229,115 @@ export default function MediaLibraryModal({
                 </div>
               ) : (
                 <>
-                  <div className="mb-4 text-sm text-gray-500">
-                    <p>Sýni {images.length} myndir, nýjustu efst</p>
-                  </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                    {images.map((image) => (
-                      <div 
-                        key={image.public_id} 
-                        className={`relative aspect-square rounded-md overflow-hidden cursor-pointer border-2 ${
-                          selectedImage === image.secure_url 
-                            ? "border-blue-500" 
-                            : "border-transparent hover:border-gray-300"
-                        }`}
-                        onClick={() => handleImageSelect(image.secure_url)}
+                  <div className="flex justify-between items-center mb-4">
+                    <p className="text-sm text-gray-500">
+                      {images.length > imagesPerPage 
+                        ? `Sýni ${paginatedImages.length} af ${images.length} myndum (síða ${page}/${totalPages})` 
+                        : `Sýni allar ${images.length} myndir, nýjustu efst`}
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <select
+                        value={viewMode}
+                        onChange={(e) => setViewMode(e.target.value as "grid" | "list")}
+                        className="text-sm py-1 px-2 border rounded"
                       >
-                        <Image
-                          src={image.secure_url}
-                          alt=""
-                          fill
-                          sizes="(max-width: 768px) 33vw, 25vw"
-                          style={{ objectFit: "cover" }}
-                        />
-                        {selectedImage === image.secure_url && (
-                          <div className="absolute top-2 right-2 bg-blue-500 rounded-full w-6 h-6 flex items-center justify-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                            </svg>
-                          </div>
-                        )}
-                      </div>
-                    ))}
+                        <option value="grid">Grid útlit</option>
+                        <option value="list">Lista útlit</option>
+                      </select>
+                    </div>
                   </div>
+                  
+                  {viewMode === "grid" ? (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                      {paginatedImages.map((image) => (
+                        <div 
+                          key={image.public_id} 
+                          className={`relative aspect-square rounded-md overflow-hidden cursor-pointer border-2 ${
+                            selectedImage === image.secure_url 
+                              ? "border-blue-500" 
+                              : "border-transparent hover:border-gray-300"
+                          }`}
+                          onClick={() => handleImageSelect(image.secure_url)}
+                        >
+                          <Image
+                            src={image.secure_url}
+                            alt=""
+                            fill
+                            sizes="(max-width: 768px) 33vw, 25vw"
+                            style={{ objectFit: "cover" }}
+                          />
+                          {selectedImage === image.secure_url && (
+                            <div className="absolute top-2 right-2 bg-blue-500 rounded-full w-6 h-6 flex items-center justify-center">
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                              </svg>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="flex flex-col gap-2">
+                      {paginatedImages.map((image) => (
+                        <div 
+                          key={image.public_id}
+                          className={`flex items-center p-2 rounded-md cursor-pointer ${
+                            selectedImage === image.secure_url 
+                              ? "bg-blue-100" 
+                              : "hover:bg-gray-100"
+                          }`}
+                          onClick={() => handleImageSelect(image.secure_url)}
+                        >
+                          <div className="relative h-16 w-16 bg-gray-50 rounded mr-3 overflow-hidden">
+                            <Image
+                              src={image.secure_url}
+                              alt=""
+                              fill
+                              sizes="64px"
+                              style={{ objectFit: "cover" }}
+                            />
+                          </div>
+                          <div className="flex-1 truncate text-sm">
+                            {image.public_id.split('/').pop()}
+                          </div>
+                          {selectedImage === image.secure_url && (
+                            <div className="bg-blue-500 rounded-full w-6 h-6 flex items-center justify-center ml-2">
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                              </svg>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  
+                  {/* Pagination controls */}
+                  {images.length > imagesPerPage && (
+                    <div className="mt-6 flex justify-center">
+                      <div className="flex items-center gap-2">
+                        <button 
+                          onClick={() => setPage(p => Math.max(1, p - 1))}
+                          disabled={page === 1}
+                          className="px-3 py-1 bg-gray-200 rounded-md disabled:opacity-50 text-sm"
+                        >
+                          Fyrri
+                        </button>
+                        
+                        <span className="text-sm">
+                          {page} af {totalPages}
+                        </span>
+                        
+                        <button 
+                          onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                          disabled={page === totalPages}
+                          className="px-3 py-1 bg-gray-200 rounded-md disabled:opacity-50 text-sm"
+                        >
+                          Næsta
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </>
               )}
             </>
