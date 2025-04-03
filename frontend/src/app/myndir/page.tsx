@@ -24,7 +24,7 @@ export default function ImagesPage() {
   const [imageError, setImageError] = useState("");
   const [copiedUrl, setCopiedUrl] = useState("");
 
-  const defaultPreset = "verkefnalisti-uploads";
+  const defaultPreset = "verkefnalisti-mana"; // Changed from "verkefnalisti-uploads"
   const [uploadPreset, setUploadPreset] = useState(defaultPreset);
   const [customPreset, setCustomPreset] = useState("");
   const [showCustomPreset, setShowCustomPreset] = useState(false);
@@ -204,8 +204,8 @@ export default function ImagesPage() {
                 }}
                 className="flex-1 px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value="verkefnalisti-uploads">
-                  verkefnalisti-uploads (sjálfgefið)
+                <option value="verkefnalisti-mana">
+                  verkefnalisti-mana (sjálfgefið) {/* setja rétt " */}
                 </option>
                 <option value="custom">Bæta við eigin preset...</option>
               </select>
@@ -230,7 +230,7 @@ export default function ImagesPage() {
 
           <div className="mt-2 text-sm text-gray-500">
             <p>
-              Notað er <strong>verkefnalisti-uploads</strong> sem er
+              Notað er <strong>verkefnalisti-mana</strong> sem er
               sjálfgefið preset fyrir verkefnið.
             </p>
           </div>

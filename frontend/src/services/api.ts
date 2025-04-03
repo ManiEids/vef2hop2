@@ -286,7 +286,7 @@ export const TagService = {
 export const CloudinaryService = {
   uploadImage: async (file: File, preset?: string) => {
     // Fallback preset - MUST be created in Cloudinary dashboard with "Unsigned" mode
-    const uploadPreset = preset || localStorage.getItem("cloudinary_upload_preset") || "verkefnalisti-uploads";
+    const uploadPreset = preset || localStorage.getItem("cloudinary_upload_preset") || "verkefnalisti-mana";
     
     const cloudName = "dojqamm7u";
     
@@ -323,7 +323,7 @@ export const CloudinaryService = {
           format: data.format || 'jpg',
           created_at: new Date().toISOString()
         });
-        localStorage.setItem('cloudinary_uploaded_images', JSON.stringify(uploadedImages));
+        localStorage.set('cloudinary_uploaded_images', JSON.stringify(uploadedImages));
         
         // Also add to tasks for backward compatibility
         const tasks = storage.get(STORAGE_KEYS.TASKS) || [];

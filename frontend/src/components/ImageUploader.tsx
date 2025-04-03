@@ -15,7 +15,7 @@ export default function ImageUploader({ initialImageUrl = "", onImageSelected }:
   const [error, setError] = useState("");
 
   // Sjálfgefið preset fyrir Cloudinary
-  const DEFAULT_PRESET = "verkefnalisti-uploads";
+  const DEFAULT_PRESET = "verkefnalisti-mana";  // Changed from "verkefnalisti-uploads"
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
