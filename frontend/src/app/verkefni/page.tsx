@@ -16,6 +16,7 @@ interface Task {
   category_id?: string;
   category_name?: string;
   image_url?: string; // Added image_url property
+  tags?: string[]; // Added tags property
 }
 
 interface Category {
@@ -152,83 +153,147 @@ function TasksContent() {
         </div>
       ) : (
         <>
-          <div className="bg-white shadow overflow-hidden rounded-md">
-            <ul className="divide-y divide-gray-200">
-              {tasks.map((task) => (
-                <li
-                  key={task.id}
-                  className="task-item"
-                  style={{ "--animation-order": tasks.indexOf(task) } as any}
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {tasks.map((task, index) => (
+              <Link key={task.id} href={`/verkefni/${task.id}`}>
+                <div 
+                  className={`task-item rounded-lg shadow-md overflow-hidden transition-all hover:shadow-lg hover:translate-y-[-5px] border-l-4 ${
+                    task.completed 
+                      ? "border-green-500" 
+                      : task.due_date && new Date(task.due_date) < new Date() 
+                        ? "border-red-500" 
+                        : "border-blue-500"
+                  }`}
+                  style={{ "--animation-order": index % 6 } as any}
                 >
-                  <Link href={`/verkefni/${task.id}`}>
-                    <div className="px-6 py-4 hover:bg-gray-50 flex justify-between items-center">
-                      <div className="flex items-center">
-                        {/* Task image thumbnail */}
-                        {task.image_url && (
-                          <div className="flex-shrink-0 mr-3">
-                            <div className="relative w-16 h-16 rounded-md overflow-hidden bg-gray-100">
-                              <Image
-                                src={task.image_url}
-                                alt=""
-                                fill
-                                sizes="64px"
-                                style={{ objectFit: "cover" }}
-                              />
-                            </div>
-                          </div>
-                        )}
-                        
-                        <div>
-                          <div className="flex items-center">
-                            <span
-                              className={`${
-                                task.completed
-                                  ? "line-through text-gray-500"
-                                  : "font-medium"
-                              }`}
-                            >
-                              {task.title}
-                            </span>
-                            {task.completed && (
-                              <span className="ml-2 bg-green-100 text-green-800 text-xs px-2 py-1 rounded">
-                                Lokið
-                              </span>
-                            )}
-                          </div>
-                          {task.category_id && (
-                            <span className="text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded mt-1 inline-block">
-                              {task.category_name || getCategoryName(task.category_id)}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                      <div className="text-sm text-gray-500">
-                        {formatDate(task.due_date)}
+                  {/* Task Image - If available */}
+                  {task.image_url && (
+                    <div className="relative h-40 w-full bg-gray-100">
+                      <Image
+                        src={task.image_url}
+                        alt=""
+                        fill
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                        style={{ objectFit: "cover" }}
+                      />
+                      {/* Status badge - absolute positioned over the image */}
+                      <div className="absolute top-2 right-2">
+                        {task.completed ? (
+                          <span className="bg-green-500 text-white text-xs px-2 py-1 rounded-full">
+                            Lokið
+                          </span>
+                        ) : task.due_date && new Date(task.due_date) < new Date() ? (
+                          <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+                            Útrunnið
+                          </span>
+                        ) : null}
                       </div>
                     </div>
-                  </Link>
-                </li>
-              ))}
-            </ul>
+                  )}
+                  
+                  <div className="p-4">
+                    <div className="flex items-start justify-between gap-2">
+                      <h3 
+                        className={`text-lg font-medium mb-1 ${
+                          task.completed ? "line-through text-gray-500" : ""
+                        }`}
+                      >
+                        {task.title}
+                      </h3>
+                      
+                      {/* Only show status badge if no image (otherwise shown over image) */}
+                      {!task.image_url && task.completed && (
+                        <span className="bg-green-500 text-white text-xs px-2 py-1 rounded-full">
+                          Lokið
+                        </span>
+                      )}
+                      {!task.image_url && !task.completed && task.due_date && new Date(task.due_date) < new Date() && (
+                        <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+                          Útrunnið
+                        </span>
+                      )}
+                    </div>
+                    
+                    {task.description && (
+                      <p className="text-sm text-gray-500 line-clamp-2 mb-2">
+                        {task.description}
+                      </p>
+                    )}
+                    
+                    <div className="flex justify-between items-center mt-2 text-sm">
+                      {task.category_name && (
+                        <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded-full">
+                          {task.category_name}
+                        </span>
+                      )}
+                      
+                      {task.due_date && (
+                        <span className={`flex items-center ${
+                          !task.completed && new Date(task.due_date) < new Date() 
+                            ? "text-red-500" 
+                            : "text-gray-500"
+                        }`}>
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                          {formatDate(task.due_date)}
+                        </span>
+                      )}
+                    </div>
+                    
+                    {/* Tags */}
+                    {task.tags && task.tags.length > 0 && (
+                      <div className="mt-3 flex flex-wrap gap-1">
+                        {task.tags.slice(0, 3).map((tag, idx) => (
+                          <span 
+                            key={idx}
+                            className="bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded-full"
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                        {task.tags.length > 3 && (
+                          <span className="text-xs text-gray-500">
+                            +{task.tags.length - 3} fleiri
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </Link>
+            ))}
           </div>
 
           {totalPages > 1 && (
-            <div className="flex justify-center mt-6">
-              <nav className="flex items-center">
+            <div className="flex justify-center mt-8">
+              <nav className="flex items-center bg-white px-4 py-3 rounded-md shadow">
                 <button
                   onClick={() => handlePageChange(page - 1)}
                   disabled={page === 1}
-                  className="px-3 py-1 rounded-md mr-2 bg-gray-200 disabled:opacity-50"
+                  className="px-3 py-1 rounded-md mr-2 bg-gray-200 disabled:opacity-50 hover:bg-gray-300"
                 >
                   Fyrri
                 </button>
-                <span className="mx-2">
-                  Síða {page} af {totalPages}
-                </span>
+                <div className="flex items-center">
+                  {[...Array(totalPages)].map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => handlePageChange(i + 1)}
+                      className={`w-8 h-8 mx-1 rounded-full ${
+                        page === i + 1
+                          ? "bg-blue-500 text-white"
+                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                      }`}
+                    >
+                      {i + 1}
+                    </button>
+                  ))}
+                </div>
                 <button
                   onClick={() => handlePageChange(page + 1)}
                   disabled={page === totalPages}
-                  className="px-3 py-1 rounded-md ml-2 bg-gray-200 disabled:opacity-50"
+                  className="px-3 py-1 rounded-md ml-2 bg-gray-200 disabled:opacity-50 hover:bg-gray-300"
                 >
                   Næsta
                 </button>
