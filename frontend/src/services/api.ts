@@ -1,12 +1,27 @@
 // Grunnur fyrir API köll
+import { MockAuthService, MockTaskService, MockCategoryService, MockTagService } from './mockApi';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
+// Færanlegt flag til að stýra hvaða virkni er möckuð
+const MOCKED_FEATURES = {
+  AUTH: false,      // Nota raunverulega innskráningu
+  TASKS: false,     // Nota raunverulega verkefnavirkni
+  CATEGORIES: false, // Nota raunverulega flokkavirkni
+  TAGS: true,       // Möcka tags - líklega ekki til í bakenda
+  CLOUDINARY: true  // Nota beina Cloudinary upphleðslu í framenda
+};
 
 // Hjálparfall fyrir API köll
 export async function fetchApi(
   endpoint: string, 
   options: RequestInit = {}
 ) {
+  // Athugum hvort endapunktur sé hluti af möckuðum features
+  if (shouldUseMock(endpoint, options.method || 'GET')) {
+    console.log(`Using mock API for ${endpoint}`);
+    return handleMockApi(endpoint, options);
+  }
+  
   const token = typeof window !== 'undefined' ? localStorage.getItem("token") : null;
   
   const headers = {
@@ -16,16 +31,16 @@ export async function fetchApi(
   };
   
   try {
-    console.log(`Calling API: ${API_URL}${endpoint}`);
+    console.log(`Calling real API: ${API_URL}${endpoint}`);
     const response = await fetch(`${API_URL}${endpoint}`, {
       ...options,
       headers,
     });
     
-    // Ef svar er 404, þá er endapunkturinn ekki til
+    // Ef svar er 404, þá er endapunkturinn ekki til - prófum mock
     if (response.status === 404) {
-      console.error(`Endapunktur fannst ekki: ${API_URL}${endpoint}`);
-      throw new Error(`Endapunktur fannst ekki: ${endpoint}`);
+      console.warn(`Endpoint not found in backend: ${endpoint}, trying mock`);
+      return handleMockApi(endpoint, options);
     }
     
     // Ef svar er 401 eða 403, þá er notandi ekki með aðgang
@@ -53,14 +68,122 @@ export async function fetchApi(
     }
     
   } catch (error) {
+    // Ef um er að ræða 'Network Error', þá er bakendi líklega niðri - notum mock
+    if (error instanceof TypeError && error.message.includes('fetch')) {
+      console.warn("Network error, falling back to mock API");
+      return handleMockApi(endpoint, options);
+    }
+    
     console.error("API villa:", error);
     throw error;
   }
 }
 
+// Helper to determine if we should use mock for this endpoint/method
+function shouldUseMock(endpoint: string, method: string): boolean {
+  // Auth endpoints
+  if (endpoint.startsWith('/users/') && MOCKED_FEATURES.AUTH) {
+    return true;
+  }
+  
+  // Tags - if we need to mock them
+  if (endpoint.startsWith('/tags') && MOCKED_FEATURES.TAGS) {
+    return true;
+  }
+  
+  // Add more conditions as needed
+  return false;
+}
+
+// Hjálparfall til að meðhöndla mock API köll
+async function handleMockApi(endpoint: string, options: RequestInit) {
+  const method = options.method || 'GET';
+  
+  // Notendavirkni
+  if (endpoint.startsWith('/users/login') && method === 'POST') {
+    const body = JSON.parse(options.body as string);
+    return MockAuthService.login(body.email || body.username, body.password);
+  }
+  
+  if (endpoint.startsWith('/users/register') && method === 'POST') {
+    const body = JSON.parse(options.body as string);
+    return MockAuthService.register(body);
+  }
+  
+  if (endpoint === '/users/me') {
+    const token = localStorage.getItem("token");
+    return MockAuthService.getCurrentUser(token);
+  }
+  
+  // Verkefnavirkni
+  if (endpoint.startsWith('/tasks') && !endpoint.includes('/')) {
+    // Sækja öll verkefni
+    const url = new URL(`http://localhost${endpoint}`);
+    const page = Number(url.searchParams.get('page')) || 1;
+    const limit = Number(url.searchParams.get('limit')) || 10;
+    const category = url.searchParams.get('category') || '';
+    const tag = url.searchParams.get('tag') || '';
+    
+    return MockTaskService.getAll(page, limit, category, tag);
+  }
+  
+  if (endpoint.startsWith('/tasks/') && method === 'GET') {
+    const id = endpoint.replace('/tasks/', '');
+    return MockTaskService.getById(id);
+  }
+  
+  if (endpoint.startsWith('/tasks') && method === 'POST') {
+    const body = JSON.parse(options.body as string);
+    return MockTaskService.create(body);
+  }
+  
+  if (endpoint.startsWith('/tasks/') && method === 'PUT') {
+    const id = endpoint.replace('/tasks/', '');
+    const body = JSON.parse(options.body as string);
+    return MockTaskService.update(id, body);
+  }
+  
+  if (endpoint.startsWith('/tasks/') && method === 'DELETE') {
+    const id = endpoint.replace('/tasks/', '');
+    return MockTaskService.delete(id);
+  }
+  
+  // Flokkavirkni
+  if (endpoint === '/categories' && method === 'GET') {
+    return MockCategoryService.getAll();
+  }
+  
+  if (endpoint.startsWith('/categories/') && method === 'GET') {
+    const id = endpoint.replace('/categories/', '');
+    return MockCategoryService.getById(id);
+  }
+  
+  if (endpoint === '/categories' && method === 'POST') {
+    const body = JSON.parse(options.body as string);
+    return MockCategoryService.create(body);
+  }
+  
+  if (endpoint.startsWith('/categories/') && method === 'PUT') {
+    const id = endpoint.replace('/categories/', '');
+    const body = JSON.parse(options.body as string);
+    return MockCategoryService.update(id, body);
+  }
+  
+  if (endpoint.startsWith('/categories/') && method === 'DELETE') {
+    const id = endpoint.replace('/categories/', '');
+    return MockCategoryService.delete(id);
+  }
+  
+  // Taga virkni
+  if (endpoint === '/tags' && method === 'GET') {
+    return MockTagService.getAll();
+  }
+  
+  throw new Error(`Endpoint ekki studdur í mock API: ${endpoint}`);
+}
+
 // Verkefna þjónusta
 export const TaskService = {
-  // Sækja öll verkefni með síðuskiptingu
   getAll: async (page = 1, limit = 10, category?: string, tag?: string) => {
     let query = `?page=${page}&limit=${limit}`;
     if (category) query += `&category=${category}`;
@@ -69,12 +192,10 @@ export const TaskService = {
     return fetchApi(`/tasks${query}`);
   },
   
-  // Sækja eitt verkefni
   getById: async (id: string) => {
     return fetchApi(`/tasks/${id}`);
   },
   
-  // Búa til nýtt verkefni
   create: async (taskData: any) => {
     return fetchApi("/tasks", {
       method: "POST",
@@ -82,7 +203,6 @@ export const TaskService = {
     });
   },
   
-  // Uppfæra verkefni
   update: async (id: string, taskData: any) => {
     return fetchApi(`/tasks/${id}`, {
       method: "PUT",
@@ -90,7 +210,6 @@ export const TaskService = {
     });
   },
   
-  // Eyða verkefni
   delete: async (id: string) => {
     return fetchApi(`/tasks/${id}`, {
       method: "DELETE",
@@ -100,17 +219,14 @@ export const TaskService = {
 
 // Flokka þjónusta
 export const CategoryService = {
-  // Sækja alla flokka
   getAll: async () => {
     return fetchApi("/categories");
   },
   
-  // Sækja einn flokk
   getById: async (id: string) => {
     return fetchApi(`/categories/${id}`);
   },
   
-  // Búa til nýjan flokk
   create: async (categoryData: any) => {
     return fetchApi("/categories", {
       method: "POST",
@@ -118,7 +234,6 @@ export const CategoryService = {
     });
   },
   
-  // Uppfæra flokk
   update: async (id: string, categoryData: any) => {
     return fetchApi(`/categories/${id}`, {
       method: "PUT",
@@ -126,10 +241,16 @@ export const CategoryService = {
     });
   },
   
-  // Eyða flokki
   delete: async (id: string) => {
     return fetchApi(`/categories/${id}`, {
       method: "DELETE",
     });
+  }
+};
+
+// Bætum við taga þjónustu
+export const TagService = {
+  getAll: async () => {
+    return fetchApi("/tags");
   }
 };

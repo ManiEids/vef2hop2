@@ -4,6 +4,7 @@ import "./globals.css";
 import NavBar from "@/components/NavBar";
 import Footer from "@/components/Footer";
 import { AuthProvider } from "@/context/AuthContext";
+import StarsBackground from "@/components/StarsBackground";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -23,6 +24,7 @@ export default function RootLayout({
   return (
     <html lang="is">
       <body className={inter.className}>
+        <StarsBackground />
         <AuthProvider>
           <div className="min-h-screen flex flex-col">
             <NavBar />

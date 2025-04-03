@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { fetchApi } from "@/services/api";
 
 type User = {
   id: string;
@@ -28,19 +29,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const token = localStorage.getItem("token");
       if (token) {
         try {
-          const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/me`, {
+          const userData = await fetchApi(`/users/me`, {
             headers: {
               Authorization: `Bearer ${token}`,
             },
           });
           
-          if (response.ok) {
-            const userData = await response.json();
+          if (userData) {
             setUser({
               id: userData.id,
               name: userData.name || userData.username,
               email: userData.email,
-              isAdmin: userData.admin || false,
+              isAdmin: userData.isAdmin || false,
             });
           } else {
             // Token ekki lengur gildt
@@ -48,6 +48,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
         } catch (error) {
           console.error("Villa við að sækja notanda:", error);
+          localStorage.removeItem("token");
         }
       }
       setLoading(false);
@@ -59,31 +60,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (email: string, password: string) => {
     setLoading(true);
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/login`, {
+      // Búum til bæði endpoint format til að styðja mismunandi bakenda
+      const payload = {
+        email,
+        password,
+        username: email // Sum API nota username í staðinn fyrir email
+      };
+      
+      const response = await fetchApi(`/users/login`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify(payload),
       });
 
-      if (!response.ok) {
+      if (response && (response.token || response.accessToken)) {
+        // Styðjum bæði token og accessToken format
+        const token = response.token || response.accessToken;
+        localStorage.setItem("token", token);
+        
+        // Styðjum mismunandi format á user object
+        const userData = response.user || response;
+        
+        setUser({
+          id: userData.id || userData.userId || userData._id,
+          name: userData.name || userData.username || email,
+          email: userData.email || email,
+          isAdmin: userData.admin || userData.isAdmin || false,
+        });
+        
+        setLoading(false);
+        return true;
+      } else {
         setLoading(false);
         return false;
       }
-
-      const data = await response.json();
-      localStorage.setItem("token", data.token);
-      
-      setUser({
-        id: data.user.id,
-        name: data.user.name || data.user.username,
-        email: data.user.email,
-        isAdmin: data.user.admin || false,
-      });
-      
-      setLoading(false);
-      return true;
     } catch (error) {
       console.error("Innskráning mistókst:", error);
       setLoading(false);

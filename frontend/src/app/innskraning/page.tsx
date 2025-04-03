@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
 
@@ -11,6 +11,8 @@ export default function Login() {
   const [error, setError] = useState("");
   const router = useRouter();
   const { login, loading } = useAuth();
+  const searchParams = useSearchParams();
+  const registered = searchParams.get("registered");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,19 +36,42 @@ export default function Login() {
     <div className="max-w-md mx-auto mt-10 p-6 bg-white rounded-lg shadow-md">
       <h1 className="text-2xl font-bold text-center mb-6">Innskráning</h1>
       
+      {registered && (
+        <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
+          Nýskráning tókst! Þú getur nú skráð þig inn.
+        </div>
+      )}
+      
       {error && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
           {error}
         </div>
       )}
       
+      {/* Prófunaraðgangur upplýsingar */}
+      <div className="bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded mb-6">
+        <h2 className="font-semibold mb-2">Prófunaraðgangar fyrir verkefnið:</h2>
+        <ul className="list-disc pl-5 space-y-1">
+          <li>
+            <strong>Stjórnandi:</strong> notandanafn: <code className="bg-gray-200 px-1">admin</code>, 
+            lykilorð: <code className="bg-gray-200 px-1">admin</code>
+            <div className="text-sm mt-1">Hefur fullan aðgang að öllum aðgerðum kerfisins, þ.m.t. stjórnborð og umsjón með flokkum</div>
+          </li>
+          <li>
+            <strong>Venjulegur notandi:</strong> notandanafn: <code className="bg-gray-200 px-1">user</code>, 
+            lykilorð: <code className="bg-gray-200 px-1">user</code>
+            <div className="text-sm mt-1">Hefur takmarkaðan aðgang - getur skoðað og búið til verkefni en hefur ekki aðgang að stjórnborði og getur ekki búið til nýja flokka</div>
+          </li>
+        </ul>
+      </div>
+      
       <form onSubmit={handleSubmit}>
         <div className="mb-4">
           <label htmlFor="email" className="block text-gray-700 font-medium mb-2">
-            Netfang
+            Netfang / Notandanafn
           </label>
           <input
-            type="email"
+            type="text"
             id="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}

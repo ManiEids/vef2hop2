@@ -44,51 +44,76 @@ export default function ImagesPage() {
     }
     
     const formData = new FormData();
-    formData.append("image", selectedFile);
+    formData.append("file", selectedFile);
+    formData.append("upload_preset", "verkefnalisti"); // Þú þarft að búa til upload preset á Cloudinary
+    formData.append("folder", "verkefnalisti-mana");
     
     setUploading(true);
     setError("");
     setSuccess("");
     
     try {
-      const token = localStorage.getItem("token");
-      const endpoint = "/images/upload";
-      console.log(`Hleð upp mynd á: ${process.env.NEXT_PUBLIC_API_URL}${endpoint}`);
+      // Fyrst reynum við að nota bakendann ef hann styður mynda-upphleðslu
+      try {
+        const token = localStorage.getItem("token");
+        
+        // Búum til FormData fyrir bakendann
+        const backendFormData = new FormData();
+        backendFormData.append("image", selectedFile);
+        
+        const backendResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/images/upload`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: backendFormData,
+        });
+        
+        // Ef bakendinn styður þetta, þá notum við hann
+        if (backendResponse.ok) {
+          const data = await backendResponse.json();
+          setUploadedImageUrl(data.url || data.secure_url);
+          setSuccess("Mynd var hlaðið upp!");
+          
+          // Hreinsum upp
+          setSelectedFile(null);
+          if (previewUrl) {
+            URL.revokeObjectURL(previewUrl);
+            setPreviewUrl(null);
+          }
+          setUploading(false);
+          return;
+        }
+        
+        // Ef bakendinn styður það ekki (404 t.d.), þá förum við í Plan B
+        console.log("Backend image upload not available, using direct Cloudinary upload");
+      } catch (backendError) {
+        console.warn("Backend image upload failed, using direct Cloudinary upload", backendError);
+      }
       
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}${endpoint}`, {
-        method: "POST",
-        headers: {
-          // Ekki setja Content-Type fyrir FormData
-          Authorization: `Bearer ${token}`,
-        },
-        body: formData,
-      });
-      
-      console.log("Svarstatus:", response.status);
-      const text = await response.text();
-      console.log("Svar frá vefþjóni:", text);
+      // Plan B: Notum beina upphleðslu á Cloudinary
+      const response = await fetch(
+        `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`,
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
       
       if (!response.ok) {
         throw new Error(`Villa við upphleðslu: ${response.status}`);
       }
       
-      let data;
-      try {
-        data = JSON.parse(text);
-        setUploadedImageUrl(data.url);
-        setSuccess("Mynd var hlaðið upp!");
-      } catch (error) {
-        console.error("Ekki JSON svar:", text);
-        throw new Error("Óvænt svar frá vefþjóni");
-      }
+      const data = await response.json();
+      setUploadedImageUrl(data.secure_url);
+      setSuccess("Mynd var hlaðið upp í Cloudinary!");
       
-      // Hreinsa valda skrá og forskoðun
+      // Hreinsum upp
       setSelectedFile(null);
       if (previewUrl) {
         URL.revokeObjectURL(previewUrl);
         setPreviewUrl(null);
       }
-      
     } catch (err) {
       console.error("Upphleðsla mistókst:", err);
       setError("Villa kom upp við að hlaða upp mynd");
@@ -147,6 +172,7 @@ export default function ImagesPage() {
                 <Image 
                   src={previewUrl} 
                   fill
+                  sizes="(max-width: 768px) 100vw, 50vw"
                   alt="Forskoðun"
                   style={{ objectFit: "contain" }}
                 />
@@ -171,6 +197,7 @@ export default function ImagesPage() {
             <Image 
               src={uploadedImageUrl} 
               fill
+              sizes="(max-width: 768px) 100vw, 50vw"
               alt="Upphlaðin mynd"
               style={{ objectFit: "contain" }}
             />
