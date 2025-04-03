@@ -60,7 +60,15 @@ export default function MediaLibraryModal({
       setLoading(true);
       setError("");
       const imageList = await CloudinaryService.getImages("verkefnalisti-mana");
-      setImages(imageList.resources || []);
+      
+      // Fyrir öryggi - fjarlægja tvítekningar eftir URL
+      const uniqueImages = new Map();
+      imageList.resources.forEach((img: CloudinaryImage) => {
+        uniqueImages.set(img.secure_url, img);
+      });
+      
+      setImages(Array.from(uniqueImages.values()));
+      console.log(`Sækja myndir: ${Array.from(uniqueImages.values()).length} einstakar myndir fundust`);
     } catch (err: any) {
       setError("Villa við að sækja myndir");
       console.error(err);

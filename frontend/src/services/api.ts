@@ -309,73 +309,156 @@ export const CloudinaryService = {
     }
   },
   
-  // sækja myndir af cloudinary 
+  // Uppfært til að sækja myndir beint frá Cloudinary þegar hægt er
   getImages: async (folder?: string) => {
     const cloudName = "dojqamm7u";
     
     try {
-      // Fyrir mock - skila fyrri myndum frá localStorage
-      const mockImages = [];
+      // Prófa fyrst að sækja beint frá Cloudinary API
+      const url = `https://res.cloudinary.com/${cloudName}/image/list/${folder || 'verkefnalisti-mana'}.json`;
+      
+      try {
+        const response = await fetch(url);
+        
+        if (response.ok) {
+          const data = await response.json();
+          console.log("Sótti myndir frá Cloudinary:", data.resources.length);
+          
+          // Format fyrir samkvæmni
+          return {
+            resources: data.resources.map((resource: any) => ({
+              public_id: resource.public_id,
+              secure_url: `https://res.cloudinary.com/${cloudName}/image/upload/${resource.public_id}.${resource.format}`,
+              format: resource.format,
+              created_at: new Date().toISOString()
+            }))
+          };
+        }
+      } catch (error) {
+        console.log("Villa við að sækja myndir beint frá Cloudinary, nota mock");
+      }
+      
+      // Ef Cloudinary API svar mistekst, notum mock
+      // Söfnum öllum mögulegum myndum og fjarlægjum tvítekningar
+      const allImages = new Map();
       
       // Sækja verkefni sem innihalda myndir
       const tasks = storage.get(STORAGE_KEYS.TASKS) || [];
       const imagesFromTasks = tasks
         .filter((task: any) => task.image_url)
-        .map((task: any) => ({
-          public_id: task.image_url.split('/').pop().split('.')[0],
-          secure_url: task.image_url,
-          format: task.image_url.split('.').pop(),
-          created_at: task.created_at
-        }));
+        .map((task: any) => {
+          const url = task.image_url;
+          return {
+            public_id: url.split('/').pop().split('.')[0],
+            secure_url: url,
+            format: url.split('.').pop(),
+            created_at: task.created_at
+          };
+        });
+        
+      // Bæta myndum við Map eftir URL til að koma í veg fyrir tvítekningar
+      imagesFromTasks.forEach(img => {
+        allImages.set(img.secure_url, img);
+      });
       
-      // Bæta við sýnishornum ef engar myndir
-      if (imagesFromTasks.length === 0) {
-        mockImages.push({
+      // Sample myndir - alltaf sýna fyrir dæmi
+      const sampleImages = [
+        {
           public_id: 'sample1',
           secure_url: 'https://res.cloudinary.com/dojqamm7u/image/upload/v1741993767/verkefnalisti-mana/image-1741993765602-424312021_u7zbns.jpg',
           format: 'jpg',
           created_at: new Date().toISOString()
-        });
-        mockImages.push({
+        },
+        {
           public_id: 'sample2',
           secure_url: 'https://res.cloudinary.com/dojqamm7u/image/upload/v1741993836/verkefnalisti-mana/image-1741993835136-360129464_rdkyjm.jpg',
           format: 'jpg',
           created_at: new Date().toISOString()
-        });
-        mockImages.push({
+        },
+        {
           public_id: 'sample3',
           secure_url: 'https://res.cloudinary.com/dojqamm7u/image/upload/v1741993873/verkefnalisti-mana/image-1741993872277-918612344_akdzd0.png',
           format: 'png',
           created_at: new Date().toISOString()
-        });
-      }
+        },
+        {
+          public_id: 'cld-sample',
+          secure_url: 'https://res.cloudinary.com/dojqamm7u/image/upload/v1741988208/cld-sample.jpg',
+          format: 'jpg',
+          created_at: new Date().toISOString()
+        },
+        {
+          public_id: 'cld-sample-2',
+          secure_url: 'https://res.cloudinary.com/dojqamm7u/image/upload/v1741988208/cld-sample-2.jpg',
+          format: 'jpg',
+          created_at: new Date().toISOString()
+        },
+        {
+          public_id: 'cld-sample-3',
+          secure_url: 'https://res.cloudinary.com/dojqamm7u/image/upload/v1741988208/cld-sample-3.jpg',
+          format: 'jpg',
+          created_at: new Date().toISOString()
+        },
+        {
+          public_id: 'cld-sample-4',
+          secure_url: 'https://res.cloudinary.com/dojqamm7u/image/upload/v1741988208/cld-sample-4.jpg',
+          format: 'jpg',
+          created_at: new Date().toISOString()
+        },
+        {
+          public_id: 'cld-sample-5',
+          secure_url: 'https://res.cloudinary.com/dojqamm7u/image/upload/v1741988208/cld-sample-5.jpg',
+          format: 'jpg',
+          created_at: new Date().toISOString()
+        }
+      ];
       
-      return {
-        resources: [...mockImages, ...imagesFromTasks]
-      };
-      
-      // Athugasemd: Í alvöru útfærslu myndum við nota Cloudinary API með lyklum
-      /*
-      const apiSecret = process.env.CLOUDINARY_API_SECRET;
-      const apiKey = process.env.CLOUDINARY_API_KEY;
-      
-      const timestamp = Math.round(new Date().getTime() / 1000);
-      const signature = generateSignature({ timestamp, folder });
-      
-      const url = `https://api.cloudinary.com/v1_1/${cloudName}/resources/image?prefix=${folder || ''}&max_results=30`;
-      
-      const response = await fetch(url, {
-        headers: {
-          'Authorization': `Basic ${btoa(`${apiKey}:${apiSecret}`)}`
+      // Bæta við sample myndum líka
+      sampleImages.forEach(img => {
+        if (!allImages.has(img.secure_url)) {
+          allImages.set(img.secure_url, img);
         }
       });
       
-      if (!response.ok) {
-        throw new Error(`Failed to fetch images: ${response.status}`);
-      }
+      // Fleiri myndir til að fylla upp í
+      const additionalImages = [
+        {
+          public_id: 'coffee',
+          secure_url: 'https://res.cloudinary.com/dojqamm7u/image/upload/v1741988207/samples/coffee.jpg',
+          format: 'jpg',
+          created_at: new Date().toISOString()
+        },
+        {
+          public_id: 'woman-on-a-football-field',
+          secure_url: 'https://res.cloudinary.com/dojqamm7u/image/upload/v1741988207/samples/woman-on-a-football-field.jpg',
+          format: 'jpg',
+          created_at: new Date().toISOString()
+        },
+        {
+          public_id: 'upscale-face-1',
+          secure_url: 'https://res.cloudinary.com/dojqamm7u/image/upload/v1741988208/samples/upscale-face-1.jpg',
+          format: 'jpg',
+          created_at: new Date().toISOString()
+        },
+        {
+          public_id: 'logo',
+          secure_url: 'https://res.cloudinary.com/dojqamm7u/image/upload/v1741988208/samples/logo.jpg',
+          format: 'jpg',
+          created_at: new Date().toISOString()
+        }
+      ];
       
-      return await response.json();
-      */
+      // Bæta við viðbótarmyndum ef ekki til nú þegar
+      additionalImages.forEach(img => {
+        if (!allImages.has(img.secure_url)) {
+          allImages.set(img.secure_url, img);
+        }
+      });
+      
+      return {
+        resources: Array.from(allImages.values())
+      };
+      
     } catch (error) {
       console.error("Error fetching images:", error);
       throw error;
