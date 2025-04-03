@@ -487,7 +487,7 @@ export default function ImagesPage() {
                     onClick={() => setPage(totalPages)}
                     disabled={page === totalPages}
                     className="px-2 py-1 bg-gray-200 rounded-md disabled:opacity-50 text-sm"
-                  ></button>
+                  >
                     Síðasta »
                   </button>
                 </div>
