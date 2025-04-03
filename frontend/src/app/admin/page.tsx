@@ -99,11 +99,11 @@ export default function AdminPage() {
         
         <div className="bg-white p-6 rounded-lg shadow-md">
           <h2 className="text-xl font-semibold mb-4">Notendur</h2>
-          <p className="text-gray-600 mb-4">Stjórnun notendaaðgangs</p>
+          <p className="text-gray-600 mb-4">Lorem ipsum dolor sit amet</p>
           <div className="text-sm text-gray-500">
-            <p>Innskráður sem: {user.name}</p>
-            <p>Netfang: {user.email}</p>
-            <p>Hlutverk: Stjórnandi</p>
+            <p>Lorem ipsum: {user.name}</p>
+            <p>Lorem ipsum: {user.email}</p>
+            <p>Lorem ipsum: Stjórnandi</p>
           </div>
         </div>
       </div>

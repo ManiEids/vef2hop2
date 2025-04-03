@@ -5,10 +5,10 @@ export default function Unauthorized() {
     <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
       <h1 className="text-6xl font-bold text-red-500">403</h1>
       <h2 className="text-2xl md:text-3xl font-medium text-gray-600 mt-4 mb-6">
-        Óheimilaður aðgangur
+        Lorem ipsum
       </h2>
       <p className="text-gray-500 mb-8 max-w-md">
-        Þú hefur ekki heimild til að skoða þessa síðu. Vinsamlegast skráðu þig inn eða hafðu samband við umsjónarmann.
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam euismod, nisl eget fermentum.
       </p>
       <div className="flex gap-4">
         <Link 

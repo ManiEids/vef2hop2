@@ -1,6 +1,6 @@
 # Verkefnalisti - Next.js Framendi
 
-Frontend hluti verkefnalista byggður á Next.js sem tengist við REST API bakenda.
+Lorem ipsum dolor sit amet, consectetur adipiscing elit.
 
 ## Uppsetning verkefnis
 
@@ -40,5 +40,5 @@ Frontend hluti verkefnalista byggður á Next.js sem tengist við REST API baken
 
 ## Umhverfisbreytur
 
-Verkefnið notar eftirfarandi umhverfisbreytur sem þarf að setja upp í `.env.local` skrá:
+Lorem ipsum dolor sit amet, consectetur adipiscing elit:
 

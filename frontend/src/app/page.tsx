@@ -7,10 +7,10 @@ export default function Home() {
       <div className="grid md:grid-cols-2 gap-10 items-center">
         <div>
           <h1 className="text-4xl md:text-5xl font-bold mb-6">
-            Verkefnalisti fyrir skilvirkari vinnubrögð
+            Verkefnalisti
           </h1>
           <p className="text-lg text-gray-600 mb-8">
-            Haltu utan um öll þín verkefni á einum stað. Skipuleggðu, flokkaðu og merktu verkefni til að auka skilvirkni.
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam euismod, nisl eget fermentum aliquam, magna est convallis nunc, vel ultricies lorem nisl vel ligula.
           </p>
           <div className="space-x-4">
             <Link 
@@ -31,7 +31,7 @@ export default function Home() {
         <div className="relative h-[400px] rounded-lg overflow-hidden shadow-xl">
           <Image 
             src="https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1472&q=80" 
-            alt="Vinnuborð með tölvu og verkefnalista"
+            alt="Lorem ipsum"
             fill
             sizes="(max-width: 768px) 100vw, 50vw"
             style={{ objectFit: "cover" }}
@@ -42,21 +42,21 @@ export default function Home() {
       
       <div className="mt-20 grid md:grid-cols-3 gap-8">
         <div className="bg-white p-6 rounded-lg shadow-md">
-          <h3 className="text-xl font-semibold mb-3">Skipulagðu verkefni</h3>
+          <h3 className="text-xl font-semibold mb-3">Lorem ipsum</h3>
           <p className="text-gray-600">
-            Haltu utan um öll þín verkefni á einum stað með skýrum titlum og lýsingum.
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce sed tellus sed lacus dapibus aliquet.
           </p>
         </div>
         <div className="bg-white p-6 rounded-lg shadow-md">
-          <h3 className="text-xl font-semibold mb-3">Flokkaðu eftir efni</h3>
+          <h3 className="text-xl font-semibold mb-3">Lorem ipsum</h3>
           <p className="text-gray-600">
-            Notaðu flokka og merki til að halda verkefnum þínum skipulögðum og aðgengilegum.
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque consectetur sem at metus dignissim eleifend.
           </p>
         </div>
         <div className="bg-white p-6 rounded-lg shadow-md">
-          <h3 className="text-xl font-semibold mb-3">Fylgstu með framvindu</h3>
+          <h3 className="text-xl font-semibold mb-3">Lorem ipsum</h3>
           <p className="text-gray-600">
-            Merktu verkefni sem lokið og fylgstu með framvindu verkefna þinna.
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla egestas nisl vel purus malesuada elementum.
           </p>
         </div>
       </div>

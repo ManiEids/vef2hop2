@@ -5,10 +5,10 @@ export default function NotFound() {
     <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
       <h1 className="text-6xl font-bold text-gray-800">404</h1>
       <h2 className="text-2xl md:text-3xl font-medium text-gray-600 mt-4 mb-6">
-        Síða fannst ekki
+        Lorem ipsum
       </h2>
       <p className="text-gray-500 mb-8 max-w-md">
-        Síðan sem þú ert að leita að er ekki til eða hefur verið færð.
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam euismod, nisl eget fermentum.
       </p>
       <Link 
         href="/"

@@ -152,7 +152,7 @@ export default function ImagesPage() {
         <form onSubmit={handleUpload}>
           <div className="mb-4">
             <label className="block text-gray-700 font-medium mb-2">
-              Veldu mynd
+              Lorem ipsum
             </label>
             <input
               type="file"
@@ -161,7 +161,7 @@ export default function ImagesPage() {
               className="w-full text-gray-700 border border-gray-300 rounded py-2 px-3"
             />
             <p className="mt-1 text-sm text-gray-500">
-              JPG eða PNG, hámark 5MB
+              Lorem ipsum dolor sit amet
             </p>
           </div>
           
@@ -203,7 +203,7 @@ export default function ImagesPage() {
             />
           </div>
           <div className="bg-gray-100 p-3 rounded-md">
-            <p className="text-sm font-medium mb-1">Slóð á mynd:</p>
+            <p className="text-sm font-medium mb-1">Lorem ipsum:</p>
             <div className="flex">
               <input 
                 type="text"
