@@ -5,6 +5,7 @@ import { TaskService, CategoryService } from "@/services/api";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { useSearchParams } from "next/navigation";
+import Image from "next/image";
 
 interface Task {
   id: string;
@@ -14,6 +15,7 @@ interface Task {
   completed: boolean;
   category_id?: string;
   category_name?: string;
+  image_url?: string; // Added image_url property
 }
 
 interface Category {
@@ -160,28 +162,45 @@ function TasksContent() {
                 >
                   <Link href={`/verkefni/${task.id}`}>
                     <div className="px-6 py-4 hover:bg-gray-50 flex justify-between items-center">
-                      <div>
-                        <div className="flex items-center">
-                          <span
-                            className={`${
-                              task.completed
-                                ? "line-through text-gray-500"
-                                : "font-medium"
-                            }`}
-                          >
-                            {task.title}
-                          </span>
-                          {task.completed && (
-                            <span className="ml-2 bg-green-100 text-green-800 text-xs px-2 py-1 rounded">
-                              Lokið
+                      <div className="flex items-center">
+                        {/* Task image thumbnail */}
+                        {task.image_url && (
+                          <div className="flex-shrink-0 mr-3">
+                            <div className="relative w-16 h-16 rounded-md overflow-hidden bg-gray-100">
+                              <Image
+                                src={task.image_url}
+                                alt=""
+                                fill
+                                sizes="64px"
+                                style={{ objectFit: "cover" }}
+                              />
+                            </div>
+                          </div>
+                        )}
+                        
+                        <div>
+                          <div className="flex items-center">
+                            <span
+                              className={`${
+                                task.completed
+                                  ? "line-through text-gray-500"
+                                  : "font-medium"
+                              }`}
+                            >
+                              {task.title}
+                            </span>
+                            {task.completed && (
+                              <span className="ml-2 bg-green-100 text-green-800 text-xs px-2 py-1 rounded">
+                                Lokið
+                              </span>
+                            )}
+                          </div>
+                          {task.category_id && (
+                            <span className="text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded mt-1 inline-block">
+                              {task.category_name || getCategoryName(task.category_id)}
                             </span>
                           )}
                         </div>
-                        {task.category_id && (
-                          <span className="text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded mt-1 inline-block">
-                            {task.category_name || getCategoryName(task.category_id)}
-                          </span>
-                        )}
                       </div>
                       <div className="text-sm text-gray-500">
                         {formatDate(task.due_date)}

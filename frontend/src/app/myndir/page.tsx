@@ -1,8 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import Image from "next/image";
+import { CloudinaryService } from "@/services/api";
+
+interface CloudinaryImage {
+  public_id: string;
+  secure_url: string;
+  created_at: string;
+  format: string;
+}
 
 export default function ImagesPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -11,6 +19,10 @@ export default function ImagesPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null);
+  const [images, setImages] = useState<CloudinaryImage[]>([]);
+  const [loadingImages, setLoadingImages] = useState(false);
+  const [imageError, setImageError] = useState("");
+  const [copiedUrl, setCopiedUrl] = useState("");
 
   const defaultPreset = "verkefnalisti-uploads";
   const [uploadPreset, setUploadPreset] = useState(defaultPreset);
@@ -18,6 +30,26 @@ export default function ImagesPage() {
   const [showCustomPreset, setShowCustomPreset] = useState(false);
 
   const { user } = useAuth();
+
+  useEffect(() => {
+    if (user) {
+      fetchImages();
+    }
+  }, [user]);
+
+  const fetchImages = async () => {
+    try {
+      setLoadingImages(true);
+      setImageError("");
+      const response = await CloudinaryService.getImages("verkefnalisti-mana");
+      setImages(response.resources || []);
+    } catch (err: any) {
+      console.error("Villa við að sækja myndir:", err);
+      setImageError("Villa við að sækja myndir");
+    } finally {
+      setLoadingImages(false);
+    }
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -102,12 +134,23 @@ export default function ImagesPage() {
         URL.revokeObjectURL(previewUrl);
         setPreviewUrl(null);
       }
+
+      fetchImages();
     } catch (err: any) {
       console.error("Upphleðsla mistókst:", err);
       setError(`${err.message || "Óskilgreind villa"}`);
     } finally {
       setUploading(false);
     }
+  };
+
+  const copyToClipboard = (url: string) => {
+    navigator.clipboard.writeText(url);
+    setCopiedUrl(url);
+
+    setTimeout(() => {
+      if (setCopiedUrl) setCopiedUrl("");
+    }, 2000);
   };
 
   if (!user) {
@@ -121,7 +164,7 @@ export default function ImagesPage() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="max-w-6xl mx-auto">
       <h1 className="text-3xl font-bold mb-6">Myndir</h1>
 
       <div className="bg-white p-6 rounded-lg shadow-md mb-6">
@@ -232,37 +275,86 @@ export default function ImagesPage() {
         </form>
       </div>
 
-      {uploadedImageUrl && (
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <h2 className="text-xl font-semibold mb-4">Síðasta upphlaðna mynd</h2>
-          <div className="relative h-60 bg-gray-100 rounded-md overflow-hidden mb-4">
-            <Image
-              src={uploadedImageUrl}
-              fill
-              sizes="(max-width: 768px) 100vw, 50vw"
-              alt="Upphlaðin mynd"
-              style={{ objectFit: "contain" }}
-            />
-          </div>
-          <div className="bg-gray-100 p-3 rounded-md">
-            <p className="text-sm font-medium mb-1">Slóð á mynd:</p>
-            <div className="flex">
-              <input
-                type="text"
-                value={uploadedImageUrl}
-                readOnly
-                className="flex-1 bg-white py-1 px-2 border border-gray-300 rounded-l"
-              />
-              <button
-                onClick={() => navigator.clipboard.writeText(uploadedImageUrl)}
-                className="bg-blue-500 text-white py-1 px-3 rounded-r"
-              >
-                Afrita
-              </button>
-            </div>
-          </div>
+      <div className="bg-white p-6 rounded-lg shadow-md">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-semibold">Allar myndir</h2>
+          <button
+            onClick={fetchImages}
+            className="bg-blue-500 hover:bg-blue-600 text-white text-sm px-3 py-1 rounded-md flex items-center gap-1"
+            disabled={loadingImages}
+          >
+            {loadingImages ? (
+              "Uppfæri..."
+            ) : (
+              <>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-4 w-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                  />
+                </svg>
+                Uppfæra
+              </>
+            )}
+          </button>
         </div>
-      )}
+
+        {imageError && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+            {imageError}
+          </div>
+        )}
+
+        {loadingImages ? (
+          <div className="flex justify-center py-8">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+          </div>
+        ) : images.length === 0 ? (
+          <p className="text-center text-gray-500 py-8">Engar myndir fundust.</p>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {images.map((image) => (
+              <div key={image.public_id} className="bg-gray-100 p-3 rounded-lg">
+                <div className="relative h-40 mb-2 bg-white rounded overflow-hidden">
+                  <Image
+                    src={image.secure_url}
+                    alt=""
+                    fill
+                    sizes="(max-width: 768px) 100vw, 33vw"
+                    style={{ objectFit: "contain" }}
+                  />
+                </div>
+                <div className="flex">
+                  <input
+                    type="text"
+                    value={image.secure_url}
+                    readOnly
+                    className="flex-1 text-xs bg-white px-2 py-1 border border-r-0 border-gray-300 rounded-l truncate"
+                  />
+                  <button
+                    onClick={() => copyToClipboard(image.secure_url)}
+                    className={`px-2 py-1 text-xs text-white rounded-r ${
+                      copiedUrl === image.secure_url
+                        ? "bg-green-500"
+                        : "bg-blue-500 hover:bg-blue-600"
+                    }`}
+                  >
+                    {copiedUrl === image.secure_url ? "Afritað!" : "Afrita"}
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

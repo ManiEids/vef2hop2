@@ -38,10 +38,10 @@ export default function MediaLibraryModal({
   
   // Fetch images from Cloudinary when modal opens
   useEffect(() => {
-    if (isOpen && selectedTab === "library") {
+    if (isOpen) {
       fetchImages();
     }
-  }, [isOpen, selectedTab]);
+  }, [isOpen]);
   
   // Clear selected file when switching tabs or closing modal
   useEffect(() => {
@@ -66,6 +66,13 @@ export default function MediaLibraryModal({
       console.error(err);
     } finally {
       setLoading(false);
+    }
+  };
+  
+  const refreshLibrary = () => {
+    if (isOpen) {
+      fetchImages();
+      setSelectedTab("library");
     }
   };
   
@@ -116,10 +123,13 @@ export default function MediaLibraryModal({
       setSelectedImage(cloudinaryUrl);
       setUploadSuccess(true);
       
-      // Refresh the image library
-      if (selectedTab === "upload") {
-        fetchImages();
-      }
+      // Always refresh the library after successful upload
+      fetchImages();
+      
+      // After successful upload, switch to library tab and select the new image
+      setTimeout(() => {
+        setSelectedTab("library");
+      }, 1000);
     } catch (err: any) {
       setError(err.message || "Villa við upphleðslu");
       console.error("Upphleðsla mistókst:", err);

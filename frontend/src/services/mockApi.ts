@@ -31,6 +31,8 @@ interface Category {
   name: string;
   description?: string;
   task_count?: number;
+  completed_count?: number;
+  todo_count?: number;
 }
 
 interface Tag {
@@ -373,7 +375,24 @@ export const MockTaskService = {
 export const MockCategoryService = {
   getAll: () => {
     storage.initializeIfEmpty();
-    return storage.get(STORAGE_KEYS.CATEGORIES) || [];
+    
+    // Get tasks to calculate counts for each category
+    const tasks = storage.get(STORAGE_KEYS.TASKS) || [];
+    const categories = storage.get(STORAGE_KEYS.CATEGORIES) || [];
+    
+    // Calculate task counts for each category
+    return categories.map((category: Category) => {
+      const categoryTasks = tasks.filter((task: Task) => task.category_id === category.id);
+      const completedCount = categoryTasks.filter((task: Task) => task.completed).length;
+      const todoCount = categoryTasks.length - completedCount;
+      
+      return {
+        ...category,
+        task_count: categoryTasks.length,
+        completed_count: completedCount,
+        todo_count: todoCount
+      };
+    });
   },
   
   getById: (id: string) => {

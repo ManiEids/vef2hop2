@@ -10,6 +10,8 @@ interface Category {
   name: string;
   description?: string;
   task_count?: number;
+  completed_count?: number;
+  todo_count?: number;
 }
 
 export default function CategoriesPage() {
@@ -83,10 +85,34 @@ export default function CategoriesPage() {
               {category.description && (
                 <p className="text-gray-600 mb-3 line-clamp-2">{category.description}</p>
               )}
-              <div className="text-sm text-gray-500">
-                {category.task_count !== undefined 
-                  ? `${category.task_count} verkefni` 
-                  : "Engin verkefni"}
+              
+              <div className="text-sm">
+                {category.task_count ? (
+                  <div className="flex flex-col gap-1">
+                    <div className="flex items-center text-gray-700">
+                      <span className="font-medium">{category.task_count}</span>
+                      <span className="ml-1">verkefni samtals</span>
+                    </div>
+                    
+                    <div className="flex gap-3">
+                      {category.todo_count > 0 && (
+                        <div className="flex items-center text-amber-600">
+                          <span className="w-2 h-2 rounded-full bg-amber-500 mr-1"></span>
+                          <span>{category.todo_count} óklárað</span>
+                        </div>
+                      )}
+                      
+                      {category.completed_count > 0 && (
+                        <div className="flex items-center text-green-600">
+                          <span className="w-2 h-2 rounded-full bg-green-500 mr-1"></span>
+                          <span>{category.completed_count} lokið</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <span className="text-gray-500">Engin verkefni</span>
+                )}
               </div>
             </Link>
           ))}
