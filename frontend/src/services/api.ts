@@ -286,7 +286,7 @@ export const TagService = {
 export const CloudinaryService = {
   uploadImage: async (file: File, preset?: string) => {
     // Fallback preset - MUST be created in Cloudinary dashboard with "Unsigned" mode
-    const uploadPreset = preset || localStorage.getItem("cloudinary_upload_preset") || "verkefnalisti-mana";
+    const uploadPreset = preset || localStorage.getItem("cloudinary_upload_preset") || "verkefnalisti-uploads";
     
     const cloudName = "dojqamm7u";
     
