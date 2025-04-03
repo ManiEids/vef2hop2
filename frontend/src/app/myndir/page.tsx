@@ -42,8 +42,9 @@ export default function ImagesPage() {
       setLoadingImages(true);
       setImageError("");
 
-      // Always use the correct folder name and add timestamp
+      // Generate a unique timestamp for each fetch to force cache invalidation
       const timestamp = Date.now();
+      console.log(`Fetching images with timestamp: ${timestamp}`);
       const response = await CloudinaryService.getImages("verkefnalisti-mana", timestamp);
 
       // Sort images by creation date (newest first)
@@ -146,12 +147,31 @@ export default function ImagesPage() {
         setPreviewUrl(null);
       }
 
-      // Wait a bit longer to ensure Cloudinary has processed the image
-      // Then refresh the gallery with new timestamp to avoid cache
+      // Immediately add the new image to the current state for instant feedback
+      const newImage = {
+        public_id: data.public_id,
+        secure_url: data.secure_url,
+        format: data.format || data.secure_url.split('.').pop() || 'jpg',
+        created_at: new Date().toISOString()
+      };
+      
+      // Also store in localStorage to help with persistence
+      try {
+        const uploadedImages = JSON.parse(localStorage.getItem('cloudinary_uploaded_images') || '[]');
+        uploadedImages.unshift(newImage);
+        localStorage.setItem('cloudinary_uploaded_images', JSON.stringify(uploadedImages));
+      } catch (err) {
+        console.warn("Could not save to localStorage:", err);
+      }
+      
+      // Update the UI immediately
+      setImages(prev => [newImage, ...prev]);
+      
+      // Still refresh the full gallery after a delay as a backup
       setTimeout(() => {
         console.log("Refreshing gallery with uploaded image:", data.secure_url);
         fetchImages();
-      }, 2500);
+      }, 3000);
     } catch (err: any) {
       console.error("Upphleðsla mistókst:", err);
       setError(`${err.message || "Óskilgreind villa"}`);
