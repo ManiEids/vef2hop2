@@ -14,6 +14,14 @@ const MOCKED_FEATURES = {
   CLOUDINARY: true  // Direct Cloudinary upload (always enabled for Vercel compatibility)
 };
 
+// Add this interface near the top of the file with other interfaces/types
+interface CloudinaryImage {
+  public_id: string;
+  secure_url: string;
+  format: string;
+  created_at: string;
+}
+
 // Hjálparfall fyrir API köll
 export async function fetchApi(
   endpoint: string, 
@@ -340,7 +348,7 @@ export const CloudinaryService = {
       
       // Ef Cloudinary API svar mistekst, notum mock
       // Söfnum öllum mögulegum myndum og fjarlægjum tvítekningar
-      const allImages = new Map();
+      const allImages = new Map<string, CloudinaryImage>();
       
       // Sækja verkefni sem innihalda myndir
       const tasks = storage.get(STORAGE_KEYS.TASKS) || [];
@@ -353,16 +361,16 @@ export const CloudinaryService = {
             secure_url: url,
             format: url.split('.').pop(),
             created_at: task.created_at
-          };
+          } as CloudinaryImage;
         });
         
       // Bæta myndum við Map eftir URL til að koma í veg fyrir tvítekningar
-      imagesFromTasks.forEach(img => {
+      imagesFromTasks.forEach((img: CloudinaryImage) => {
         allImages.set(img.secure_url, img);
       });
       
       // Sample myndir - alltaf sýna fyrir dæmi
-      const sampleImages = [
+      const sampleImages: CloudinaryImage[] = [
         {
           public_id: 'sample1',
           secure_url: 'https://res.cloudinary.com/dojqamm7u/image/upload/v1741993767/verkefnalisti-mana/image-1741993765602-424312021_u7zbns.jpg',
@@ -414,14 +422,14 @@ export const CloudinaryService = {
       ];
       
       // Bæta við sample myndum líka
-      sampleImages.forEach(img => {
+      sampleImages.forEach((img: CloudinaryImage) => {
         if (!allImages.has(img.secure_url)) {
           allImages.set(img.secure_url, img);
         }
       });
       
       // Fleiri myndir til að fylla upp í
-      const additionalImages = [
+      const additionalImages: CloudinaryImage[] = [
         {
           public_id: 'coffee',
           secure_url: 'https://res.cloudinary.com/dojqamm7u/image/upload/v1741988207/samples/coffee.jpg',
@@ -449,7 +457,7 @@ export const CloudinaryService = {
       ];
       
       // Bæta við viðbótarmyndum ef ekki til nú þegar
-      additionalImages.forEach(img => {
+      additionalImages.forEach((img: CloudinaryImage) => {
         if (!allImages.has(img.secure_url)) {
           allImages.set(img.secure_url, img);
         }
