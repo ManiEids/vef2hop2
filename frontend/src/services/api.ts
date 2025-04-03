@@ -21,7 +21,7 @@ export async function fetchApi(
   
   // Athugum hvort endapunktur sé hluti af möckuðum features
   if (shouldUseMock(baseEndpoint, options.method || 'GET')) {
-    console.log(`Nota mökk API fyrir ${endpoint}`);
+    console.log(`Nota mock API fyrir ${endpoint}`);
     return handleMockApi(endpoint, options);
   }
   
@@ -73,7 +73,7 @@ export async function fetchApi(
   } catch (error) {
     // Ef um er að ræða 'Network Error', þá er bakendi líklega niðri
     // Gæti einnig verið um að ræða CORS villu
-    console.warn("Netvilla, nota mökkuð gögn í staðinn");
+    console.warn("Netvilla, nota mock gögn í staðinn");
     return handleMockApi(endpoint, options);
   }
 }

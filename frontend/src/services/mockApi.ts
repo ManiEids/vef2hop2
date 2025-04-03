@@ -392,6 +392,24 @@ export const MockCategoryService = {
   create: (categoryData: Partial<Category>) => {
     storage.initializeIfEmpty();
     
+    // Get the current token and check if user is admin
+    const token = localStorage.getItem("token");
+    let isAdmin = false;
+    
+    try {
+      if (token) {
+        const userData = JSON.parse(atob(token));
+        isAdmin = userData.isAdmin || false;
+      }
+    } catch (e) {
+      // Invalid token format
+    }
+    
+    // Only allow admins to create categories
+    if (!isAdmin) {
+      throw new Error('Aðeins stjórnendur geta búið til flokka');
+    }
+    
     const categories = storage.get(STORAGE_KEYS.CATEGORIES) || [];
     
     // Athuga hvort flokkur með sama nafn sé til
@@ -414,6 +432,23 @@ export const MockCategoryService = {
   update: (id: string, categoryData: Partial<Category>) => {
     storage.initializeIfEmpty();
     
+    // Check admin status first
+    const token = localStorage.getItem("token");
+    let isAdmin = false;
+    
+    try {
+      if (token) {
+        const userData = JSON.parse(atob(token));
+        isAdmin = userData.isAdmin || false;
+      }
+    } catch (e) {
+      // Invalid token format
+    }
+    
+    if (!isAdmin) {
+      throw new Error('Aðeins stjórnendur geta breytt flokkum');
+    }
+    
     const categories = storage.get(STORAGE_KEYS.CATEGORIES) || [];
     
     const categoryIndex = categories.findIndex((c: Category) => c.id === id);
@@ -435,6 +470,23 @@ export const MockCategoryService = {
   
   delete: (id: string) => {
     storage.initializeIfEmpty();
+    
+    // Check admin status first
+    const token = localStorage.getItem("token");
+    let isAdmin = false;
+    
+    try {
+      if (token) {
+        const userData = JSON.parse(atob(token));
+        isAdmin = userData.isAdmin || false;
+      }
+    } catch (e) {
+      // Invalid token format
+    }
+    
+    if (!isAdmin) {
+      throw new Error('Aðeins stjórnendur geta eytt flokkum');
+    }
     
     const categories = storage.get(STORAGE_KEYS.CATEGORIES) || [];
     const newCategories = categories.filter((c: Category) => c.id !== id);
