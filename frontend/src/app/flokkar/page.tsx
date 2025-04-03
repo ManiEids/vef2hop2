@@ -87,7 +87,7 @@ export default function CategoriesPage() {
               )}
               
               <div className="text-sm">
-                {category.task_count ? (
+                {(category.task_count ?? 0) > 0 ? (
                   <div className="flex flex-col gap-1">
                     <div className="flex items-center text-gray-700">
                       <span className="font-medium">{category.task_count}</span>
@@ -95,14 +95,14 @@ export default function CategoriesPage() {
                     </div>
                     
                     <div className="flex gap-3">
-                      {category.todo_count > 0 && (
+                      {(category.todo_count ?? 0) > 0 && (
                         <div className="flex items-center text-amber-600">
                           <span className="w-2 h-2 rounded-full bg-amber-500 mr-1"></span>
                           <span>{category.todo_count} óklárað</span>
                         </div>
                       )}
                       
-                      {category.completed_count > 0 && (
+                      {(category.completed_count ?? 0) > 0 && (
                         <div className="flex items-center text-green-600">
                           <span className="w-2 h-2 rounded-full bg-green-500 mr-1"></span>
                           <span>{category.completed_count} lokið</span>
