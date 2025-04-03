@@ -29,11 +29,6 @@ export default function ImagesPage() {
   const [customPreset, setCustomPreset] = useState("");
   const [showCustomPreset, setShowCustomPreset] = useState(false);
 
-  const [page, setPage] = useState(1);
-  const [imagesPerPage, setImagesPerPage] = useState(12);
-  const [viewMode, setViewMode] = useState<"scroll" | "paginate">("scroll");
-  const [showDebugInfo, setShowDebugInfo] = useState(false);
-
   const { user } = useAuth();
 
   useEffect(() => {
@@ -54,10 +49,7 @@ export default function ImagesPage() {
       });
 
       setImages(sortedImages);
-      console.log(`Sækja myndir: ${sortedImages.length} einstakar myndir fundust`);
-      
-      // Reset to page 1 when getting new images
-      setPage(1);
+      console.log(`Sótti ${sortedImages.length} myndir frá Cloudinary`);
     } catch (err: any) {
       console.error("Villa við að sækja myndir:", err);
       setImageError("Villa við að sækja myndir");
@@ -150,10 +142,9 @@ export default function ImagesPage() {
         setPreviewUrl(null);
       }
 
-      // After successful upload, refresh the image gallery and switch to page 1
+      // After successful upload, refresh the image gallery immediately
       setTimeout(() => {
         fetchImages();
-        setPage(1);
       }, 1000);
     } catch (err: any) {
       console.error("Upphleðsla mistókst:", err);
@@ -171,13 +162,6 @@ export default function ImagesPage() {
       if (setCopiedUrl) setCopiedUrl("");
     }, 2000);
   };
-
-  const totalPages = Math.ceil(images.length / imagesPerPage);
-  const paginatedImages = viewMode === "paginate" 
-    ? images.slice((page - 1) * imagesPerPage, page * imagesPerPage)
-    : images;
-
-  const displayImages = viewMode === "paginate" ? paginatedImages : images;
 
   if (!user) {
     return (
@@ -304,26 +288,7 @@ export default function ImagesPage() {
       <div className="bg-white p-6 rounded-lg shadow-md">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold">Allar myndir</h2>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center">
-              <label htmlFor="viewMode" className="text-sm mr-2">Sýna sem:</label>
-              <select 
-                id="viewMode"
-                value={viewMode}
-                onChange={(e) => setViewMode(e.target.value as "scroll" | "paginate")}
-                className="text-sm bg-gray-100 border border-gray-300 rounded px-2 py-1"
-              >
-                <option value="scroll">Skruna</option>
-                <option value="paginate">Síður</option>
-              </select>
-            </div>
-            <button
-              onClick={() => setShowDebugInfo(!showDebugInfo)}
-              className="px-2 py-1 text-xs bg-gray-200 rounded-md"
-              title="Show/hide debug info"
-            >
-              🐞
-            </button>
+          <div>
             <button
               onClick={fetchImages}
               className="bg-blue-500 hover:bg-blue-600 text-white text-sm px-3 py-1 rounded-md flex items-center gap-1"
@@ -360,17 +325,6 @@ export default function ImagesPage() {
           </div>
         )}
 
-        {showDebugInfo && (
-          <div className="bg-gray-100 border border-gray-300 p-2 mb-4 text-xs text-gray-700 rounded">
-            <p>Total images: {images.length}</p>
-            <p>View mode: {viewMode}</p>
-            <p>Current page: {page}</p>
-            <p>Items per page: {imagesPerPage}</p>
-            <p>Total pages: {totalPages}</p>
-            <p>Showing images: {viewMode === "paginate" ? `${(page-1)*imagesPerPage+1}-${Math.min(page*imagesPerPage, images.length)}` : "All"}</p>
-          </div>
-        )}
-
         {loadingImages ? (
           <div className="flex justify-center py-8">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
@@ -380,22 +334,18 @@ export default function ImagesPage() {
         ) : (
           <>
             <div className="mb-4 text-sm text-gray-500">
-              <p>
-                {viewMode === "paginate" 
-                  ? `Sýni ${Math.min(paginatedImages.length, imagesPerPage)} af ${images.length} myndum (síða ${page}/${totalPages})` 
-                  : `Sýni allar ${images.length} myndir, nýjustu efst`}
-              </p>
+              <p>Sýni {images.length} myndir, nýjustu efst</p>
             </div>
             
             <div 
               className="overflow-y-auto" 
               style={{ 
-                maxHeight: viewMode === "scroll" ? "70vh" : "auto",
+                maxHeight: "70vh",
                 scrollBehavior: "smooth"
               }}
             >
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {displayImages.map((image, index) => (
+                {images.map((image, index) => (
                   <div key={`${image.public_id}-${index}`} className="bg-gray-100 p-3 rounded-lg">
                     <div className="relative h-40 mb-2 bg-white rounded overflow-hidden">
                       <Image
@@ -429,72 +379,7 @@ export default function ImagesPage() {
               </div>
             </div>
             
-            {(viewMode === "paginate" && totalPages > 1) && (
-              <div className="mt-6 flex justify-center">
-                <div className="flex items-center gap-2">
-                  <button 
-                    onClick={() => setPage(1)}
-                    disabled={page === 1}
-                    className="px-2 py-1 bg-gray-200 rounded-md disabled:opacity-50 text-sm"
-                  >
-                    « Fyrsta
-                  </button>
-                  <button 
-                    onClick={() => setPage(p => Math.max(1, p - 1))}
-                    disabled={page === 1}
-                    className="px-3 py-1 bg-gray-200 rounded-md disabled:opacity-50"
-                  >
-                    Fyrri
-                  </button>
-                  
-                  <div className="flex items-center gap-1 mx-2">
-                    {Array.from({length: Math.min(5, totalPages)}, (_, i) => {
-                      let pageNum;
-                      if (totalPages <= 5) {
-                        pageNum = i + 1;
-                      } else if (page <= 3) {
-                        pageNum = i + 1;
-                      } else if (page >= totalPages - 2) {
-                        pageNum = totalPages - 4 + i;
-                      } else {
-                        pageNum = page - 2 + i;
-                      }
-                      
-                      return (
-                        <button
-                          key={i}
-                          onClick={() => setPage(pageNum)}
-                          className={`w-8 h-8 rounded-md ${
-                            page === pageNum 
-                              ? "bg-blue-500 text-white" 
-                              : "bg-gray-200"
-                          }`}
-                        >
-                          {pageNum}
-                        </button>
-                      );
-                    })}
-                  </div>
-                  
-                  <button 
-                    onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                    disabled={page === totalPages}
-                    className="px-3 py-1 bg-gray-200 rounded-md disabled:opacity-50"
-                  >
-                    Næsta
-                  </button>
-                  <button 
-                    onClick={() => setPage(totalPages)}
-                    disabled={page === totalPages}
-                    className="px-2 py-1 bg-gray-200 rounded-md disabled:opacity-50 text-sm"
-                  >
-                    Síðasta »
-                  </button>
-                </div>
-              </div>
-            )}
-            
-            {viewMode === "scroll" && images.length > 12 && (
+            {images.length > 12 && (
               <div className="mt-4 text-center">
                 <button 
                   onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}

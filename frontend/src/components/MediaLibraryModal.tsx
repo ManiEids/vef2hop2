@@ -29,27 +29,23 @@ export default function MediaLibraryModal({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [selectedImage, setSelectedImage] = useState<string | null>(currentImageUrl || null);
-  
+
   // File upload states
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(false);
 
-  // View mode and pagination states
+  // Only keep grid/list view mode
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-  const [page, setPage] = useState(1);
-  const [imagesPerPage, setImagesPerPage] = useState(12);
-  const [showDebugInfo, setShowDebugInfo] = useState(false);
-  
+
   // Fetch images from Cloudinary when modal opens
   useEffect(() => {
     if (isOpen) {
       fetchImages();
-      setPage(1);
     }
   }, [isOpen]);
-  
+
   // Clear selected file when switching tabs or closing modal
   useEffect(() => {
     if (!isOpen) {
@@ -61,27 +57,25 @@ export default function MediaLibraryModal({
       setUploadSuccess(false);
     }
   }, [isOpen, selectedTab]);
-  
+
   const fetchImages = async () => {
     try {
       setLoading(true);
       setError("");
-      setPage(1); // Reset to page 1 when fetching new images
-      
+
       const imageList = await CloudinaryService.getImages("verkefnalisti-mana");
-      
+
       // Remove duplicates by URL
       const uniqueImages = new Map();
       imageList.resources.forEach((img: CloudinaryImage) => {
         uniqueImages.set(img.secure_url, img);
       });
-      
+
       // Convert to array and sort by created_at date (newest first)
-      const sortedImages = Array.from(uniqueImages.values())
-        .sort((a, b) => {
-          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-        });
-      
+      const sortedImages = Array.from(uniqueImages.values()).sort((a, b) => {
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      });
+
       setImages(sortedImages);
       console.log(`Fetched ${sortedImages.length} images for media library`);
     } catch (err: any) {
@@ -91,64 +85,64 @@ export default function MediaLibraryModal({
       setLoading(false);
     }
   };
-  
+
   const refreshLibrary = () => {
     if (isOpen) {
       fetchImages();
       setSelectedTab("library");
     }
   };
-  
+
   const handleImageSelect = (imageUrl: string) => {
     setSelectedImage(imageUrl);
   };
-  
+
   const handleConfirmSelection = () => {
     if (selectedImage) {
       onSelect(selectedImage);
       onClose();
     }
   };
-  
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    
+
     // Size limit - 5MB
     if (file.size > 5 * 1024 * 1024) {
       setError("Mynd má ekki vera stærri en 5MB");
       return;
     }
-    
+
     // Check if file is an image
     if (!file.type.match("image/(jpeg|jpg|png)")) {
       setError("Aðeins eru leyfðar JPG og PNG myndir");
       return;
     }
-    
+
     setSelectedFile(file);
     setPreviewUrl(URL.createObjectURL(file));
     setError("");
     setUploadSuccess(false);
   };
-  
+
   const handleUpload = async () => {
     if (!selectedFile) {
       setError("Vinsamlegast veldu mynd");
       return;
     }
-    
+
     setUploading(true);
     setError("");
-    
+
     try {
       const cloudinaryUrl = await CloudinaryService.uploadImage(selectedFile);
       setSelectedImage(cloudinaryUrl);
       setUploadSuccess(true);
-      
+
       // Always refresh the library after successful upload
       fetchImages();
-      
+
       // After successful upload, switch to library tab and select the new image
       setTimeout(() => {
         setSelectedTab("library");
@@ -161,30 +155,23 @@ export default function MediaLibraryModal({
     }
   };
 
-  // Calculate pagination
-  const totalPages = Math.ceil(images.length / imagesPerPage);
-  const paginatedImages = images.slice((page - 1) * imagesPerPage, page * imagesPerPage);
-  
   if (!isOpen) return null;
-  
+
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
         <div className="flex justify-between items-center px-6 py-4 border-b border-gray-200">
           <h2 className="text-xl font-semibold">Velja mynd</h2>
-          <button
-            onClick={onClose}
-            className="text-gray-500 hover:text-gray-700"
-          >
+          <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
             &times;
           </button>
         </div>
-        
+
         <div className="flex border-b border-gray-200">
           <button
             className={`px-4 py-2 ${
-              selectedTab === "library" 
-                ? "border-b-2 border-blue-500 text-blue-500" 
+              selectedTab === "library"
+                ? "border-b-2 border-blue-500 text-blue-500"
                 : "text-gray-500"
             }`}
             onClick={() => setSelectedTab("library")}
@@ -193,8 +180,8 @@ export default function MediaLibraryModal({
           </button>
           <button
             className={`px-4 py-2 ${
-              selectedTab === "upload" 
-                ? "border-b-2 border-blue-500 text-blue-500" 
+              selectedTab === "upload"
+                ? "border-b-2 border-blue-500 text-blue-500"
                 : "text-gray-500"
             }`}
             onClick={() => setSelectedTab("upload")}
@@ -202,8 +189,8 @@ export default function MediaLibraryModal({
             Hlaða upp
           </button>
         </div>
-        
-        <div className="p-6 overflow-y-auto" style={{ maxHeight: 'calc(90vh - 160px)' }}>
+
+        <div className="p-6 overflow-y-auto" style={{ maxHeight: "calc(90vh - 160px)" }}>
           {selectedTab === "library" && (
             <>
               {loading ? (
@@ -213,10 +200,7 @@ export default function MediaLibraryModal({
               ) : error ? (
                 <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
                   {error}
-                  <button 
-                    className="ml-2 underline"
-                    onClick={fetchImages}
-                  >
+                  <button className="ml-2 underline" onClick={fetchImages}>
                     Reyna aftur
                   </button>
                 </div>
@@ -233,11 +217,7 @@ export default function MediaLibraryModal({
               ) : (
                 <>
                   <div className="flex justify-between items-center mb-4">
-                    <p className="text-sm text-gray-500">
-                      {images.length > imagesPerPage 
-                        ? `Sýni ${Math.min(paginatedImages.length, imagesPerPage)} af ${images.length} myndum (síða ${page}/${totalPages})` 
-                        : `Sýni allar ${images.length} myndir, nýjustu efst`}
-                    </p>
+                    <p className="text-sm text-gray-500">{`Sýni ${images.length} myndir, nýjustu efst`}</p>
                     <div className="flex items-center gap-2">
                       <select
                         value={viewMode}
@@ -247,33 +227,17 @@ export default function MediaLibraryModal({
                         <option value="grid">Grid útlit</option>
                         <option value="list">Lista útlit</option>
                       </select>
-                      <button
-                        onClick={() => setShowDebugInfo(!showDebugInfo)}
-                        className="p-1 text-xs bg-gray-100 rounded"
-                      >
-                        🐞
-                      </button>
                     </div>
                   </div>
-                  
-                  {showDebugInfo && (
-                    <div className="bg-gray-100 border border-gray-300 p-2 mb-4 text-xs rounded">
-                      <p>Total images: {images.length}</p>
-                      <p>Current page: {page}</p>
-                      <p>Images per page: {imagesPerPage}</p>
-                      <p>Total pages: {totalPages}</p>
-                      <p>Showing: {(page-1)*imagesPerPage+1} to {Math.min(page*imagesPerPage, images.length)}</p>
-                    </div>
-                  )}
-                  
+
                   {viewMode === "grid" ? (
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                      {paginatedImages.map((image, index) => (
-                        <div 
+                      {images.map((image, index) => (
+                        <div
                           key={`${image.public_id}-${index}`}
                           className={`relative aspect-square rounded-md overflow-hidden cursor-pointer border-2 ${
-                            selectedImage === image.secure_url 
-                              ? "border-blue-500" 
+                            selectedImage === image.secure_url
+                              ? "border-blue-500"
                               : "border-transparent hover:border-gray-300"
                           }`}
                           onClick={() => handleImageSelect(image.secure_url)}
@@ -287,8 +251,19 @@ export default function MediaLibraryModal({
                           />
                           {selectedImage === image.secure_url && (
                             <div className="absolute top-2 right-2 bg-blue-500 rounded-full w-6 h-6 flex items-center justify-center">
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                className="h-4 w-4 text-white"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M5 13l4 4L19 7"
+                                />
                               </svg>
                             </div>
                           )}
@@ -297,12 +272,12 @@ export default function MediaLibraryModal({
                     </div>
                   ) : (
                     <div className="flex flex-col gap-2">
-                      {paginatedImages.map((image, index) => (
-                        <div 
+                      {images.map((image, index) => (
+                        <div
                           key={`${image.public_id}-${index}`}
                           className={`flex items-center p-2 rounded-md cursor-pointer ${
-                            selectedImage === image.secure_url 
-                              ? "bg-blue-100" 
+                            selectedImage === image.secure_url
+                              ? "bg-blue-100"
                               : "hover:bg-gray-100"
                           }`}
                           onClick={() => handleImageSelect(image.secure_url)}
@@ -317,12 +292,23 @@ export default function MediaLibraryModal({
                             />
                           </div>
                           <div className="flex-1 truncate text-sm">
-                            {image.public_id.split('/').pop()}
+                            {image.public_id.split("/").pop()}
                           </div>
                           {selectedImage === image.secure_url && (
                             <div className="bg-blue-500 rounded-full w-6 h-6 flex items-center justify-center ml-2">
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                className="h-4 w-4 text-white"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M5 13l4 4L19 7"
+                                />
                               </svg>
                             </div>
                           )}
@@ -330,56 +316,11 @@ export default function MediaLibraryModal({
                       ))}
                     </div>
                   )}
-                  
-                  {/* Enhanced pagination controls with first/last buttons */}
-                  {images.length > imagesPerPage && (
-                    <div className="mt-6 flex justify-center">
-                      <div className="flex items-center gap-2">
-                        <button 
-                          onClick={() => setPage(1)}
-                          disabled={page === 1}
-                          className="px-2 py-1 bg-gray-200 rounded-md disabled:opacity-50 text-sm"
-                          title="First page"
-                        >
-                          «
-                        </button>
-                        <button 
-                          onClick={() => setPage(p => Math.max(1, p - 1))}
-                          disabled={page === 1}
-                          className="px-3 py-1 bg-gray-200 rounded-md disabled:opacity-50 text-sm"
-                        >
-                          Fyrri
-                        </button>
-                        
-                        <div className="flex items-center mx-1">
-                          <span className="text-sm px-2">
-                            Síða <span className="font-semibold">{page}</span> af {totalPages}
-                          </span>
-                        </div>
-                        
-                        <button 
-                          onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                          disabled={page === totalPages}
-                          className="px-3 py-1 bg-gray-200 rounded-md disabled:opacity-50 text-sm"
-                        >
-                          Næsta
-                        </button>
-                        <button 
-                          onClick={() => setPage(totalPages)}
-                          disabled={page === totalPages}
-                          className="px-2 py-1 bg-gray-200 rounded-md disabled:opacity-50 text-sm"
-                          title="Last page"
-                        >
-                          »
-                        </button>
-                      </div>
-                    </div>
-                  )}
                 </>
               )}
             </>
           )}
-          
+
           {selectedTab === "upload" && (
             <div className="space-y-6">
               {error && (
@@ -387,13 +328,13 @@ export default function MediaLibraryModal({
                   {error}
                 </div>
               )}
-              
+
               {uploadSuccess && (
                 <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
                   Mynd var hlaðið upp!
                 </div>
               )}
-              
+
               <div className="mb-4">
                 <label className="block text-gray-700 font-medium mb-2">
                   Velja mynd til að hlaða upp:
@@ -408,13 +349,13 @@ export default function MediaLibraryModal({
                   Hámarksstærð: 5MB. JPG og PNG myndir.
                 </p>
               </div>
-              
+
               {previewUrl && (
                 <div className="mb-6">
                   <h3 className="text-sm font-medium text-gray-700 mb-2">Forskoðun:</h3>
                   <div className="relative h-60 bg-gray-100 rounded-md overflow-hidden">
-                    <Image 
-                      src={previewUrl} 
+                    <Image
+                      src={previewUrl}
                       fill
                       sizes="(max-width: 768px) 100vw, 50vw"
                       alt="Forskoðun"
@@ -423,7 +364,7 @@ export default function MediaLibraryModal({
                   </div>
                 </div>
               )}
-              
+
               <button
                 type="button"
                 onClick={handleUpload}
@@ -435,7 +376,7 @@ export default function MediaLibraryModal({
             </div>
           )}
         </div>
-        
+
         <div className="flex justify-end px-6 py-4 border-t border-gray-200">
           <button
             onClick={onClose}
