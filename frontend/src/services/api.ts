@@ -2,12 +2,12 @@
 import { MockAuthService, MockTaskService, MockCategoryService, MockTagService } from './mockApi';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
-// Færanlegt flag til að stýra hvaða virkni er möckuð
+// Færanlegt flag til að nota mökk í staðinn fyrir bakenda
 const MOCKED_FEATURES = {
-  AUTH: false,      // Nota raunverulega innskráningu
-  TASKS: false,     // Nota raunverulega verkefnavirkni
-  CATEGORIES: false, // Nota raunverulega flokkavirkni
-  TAGS: true,       // Möcka tags - líklega ekki til í bakenda
+  AUTH: false,      // Reyna að nota bakenda fyrir innskráningu
+  TASKS: false,     // Reyna að nota bakenda fyrir verkefni
+  CATEGORIES: false, // Reyna að nota bakenda fyrir flokka
+  TAGS: false,       // Reyna að nota bakenda fyrir tög
   CLOUDINARY: true  // Nota beina Cloudinary upphleðslu í framenda
 };
 
@@ -16,9 +16,12 @@ export async function fetchApi(
   endpoint: string, 
   options: RequestInit = {}
 ) {
+  // Hreinsa endapunkt af query params fyrir shouldUseMock til að forðast röng mökkun
+  const baseEndpoint = endpoint.split('?')[0];
+  
   // Athugum hvort endapunktur sé hluti af möckuðum features
-  if (shouldUseMock(endpoint, options.method || 'GET')) {
-    console.log(`Using mock API for ${endpoint}`);
+  if (shouldUseMock(baseEndpoint, options.method || 'GET')) {
+    console.log(`Nota mökk API fyrir ${endpoint}`);
     return handleMockApi(endpoint, options);
   }
   
@@ -31,7 +34,7 @@ export async function fetchApi(
   };
   
   try {
-    console.log(`Calling real API: ${API_URL}${endpoint}`);
+    console.log(`Kallar á raunverulegt API: ${API_URL}${endpoint}`);
     const response = await fetch(`${API_URL}${endpoint}`, {
       ...options,
       headers,
@@ -39,7 +42,7 @@ export async function fetchApi(
     
     // Ef svar er 404, þá er endapunkturinn ekki til - prófum mock
     if (response.status === 404) {
-      console.warn(`Endpoint not found in backend: ${endpoint}, trying mock`);
+      console.warn(`Endapunktur fannst ekki í bakenda: ${endpoint}, reyni mock`);
       return handleMockApi(endpoint, options);
     }
     
@@ -68,30 +71,35 @@ export async function fetchApi(
     }
     
   } catch (error) {
-    // Ef um er að ræða 'Network Error', þá er bakendi líklega niðri - notum mock
-    if (error instanceof TypeError && error.message.includes('fetch')) {
-      console.warn("Network error, falling back to mock API");
-      return handleMockApi(endpoint, options);
-    }
-    
-    console.error("API villa:", error);
-    throw error;
+    // Ef um er að ræða 'Network Error', þá er bakendi líklega niðri
+    // Gæti einnig verið um að ræða CORS villu
+    console.warn("Netvilla, nota mökkuð gögn í staðinn");
+    return handleMockApi(endpoint, options);
   }
 }
 
-// Helper to determine if we should use mock for this endpoint/method
+// Hjálparfall til að ákveða hvort nota eigi mökk fyrir þennan endapunkt
 function shouldUseMock(endpoint: string, method: string): boolean {
   // Auth endpoints
   if (endpoint.startsWith('/users/') && MOCKED_FEATURES.AUTH) {
     return true;
   }
   
-  // Tags - if we need to mock them
+  // Tasks endpoints
+  if (endpoint.startsWith('/tasks') && MOCKED_FEATURES.TASKS) {
+    return true;
+  }
+  
+  // Categories endpoints
+  if (endpoint.startsWith('/categories') && MOCKED_FEATURES.CATEGORIES) {
+    return true;
+  }
+  
+  // Tags endpoints
   if (endpoint.startsWith('/tags') && MOCKED_FEATURES.TAGS) {
     return true;
   }
   
-  // Add more conditions as needed
   return false;
 }
 
@@ -99,83 +107,91 @@ function shouldUseMock(endpoint: string, method: string): boolean {
 async function handleMockApi(endpoint: string, options: RequestInit) {
   const method = options.method || 'GET';
   
+  // Hreinsa endapunkt af query params fyrir task endpoint
+  const baseEndpoint = endpoint.split('?')[0];
+  
   // Notendavirkni
-  if (endpoint.startsWith('/users/login') && method === 'POST') {
+  if (baseEndpoint.startsWith('/users/login') && method === 'POST') {
     const body = JSON.parse(options.body as string);
     return MockAuthService.login(body.email || body.username, body.password);
   }
   
-  if (endpoint.startsWith('/users/register') && method === 'POST') {
+  if (baseEndpoint.startsWith('/users/register') && method === 'POST') {
     const body = JSON.parse(options.body as string);
     return MockAuthService.register(body);
   }
   
-  if (endpoint === '/users/me') {
+  if (baseEndpoint === '/users/me') {
     const token = localStorage.getItem("token");
     return MockAuthService.getCurrentUser(token);
   }
   
-  // Verkefnavirkni
-  if (endpoint.startsWith('/tasks') && !endpoint.includes('/')) {
+  // Verkefnavirkni - lagað að styðja querystring
+  if (baseEndpoint === '/tasks' && method === 'GET') {
     // Sækja öll verkefni
-    const url = new URL(`http://localhost${endpoint}`);
-    const page = Number(url.searchParams.get('page')) || 1;
-    const limit = Number(url.searchParams.get('limit')) || 10;
-    const category = url.searchParams.get('category') || '';
-    const tag = url.searchParams.get('tag') || '';
-    
-    return MockTaskService.getAll(page, limit, category, tag);
+    try {
+      const url = new URL(`http://localhost${endpoint}`);
+      const page = Number(url.searchParams.get('page')) || 1;
+      const limit = Number(url.searchParams.get('limit')) || 10;
+      const category = url.searchParams.get('category') || '';
+      const tag = url.searchParams.get('tag') || '';
+      
+      return MockTaskService.getAll(page, limit, category, tag);
+    } catch (error) {
+      // Ef URL parsing mistekst, reynum að nota sæmilega default gildi
+      return MockTaskService.getAll(1, 10, '', '');
+    }
   }
   
-  if (endpoint.startsWith('/tasks/') && method === 'GET') {
-    const id = endpoint.replace('/tasks/', '');
+  if (baseEndpoint.startsWith('/tasks/') && method === 'GET') {
+    const id = baseEndpoint.replace('/tasks/', '');
     return MockTaskService.getById(id);
   }
   
-  if (endpoint.startsWith('/tasks') && method === 'POST') {
+  if (baseEndpoint === '/tasks' && method === 'POST') {
     const body = JSON.parse(options.body as string);
     return MockTaskService.create(body);
   }
   
-  if (endpoint.startsWith('/tasks/') && method === 'PUT') {
-    const id = endpoint.replace('/tasks/', '');
+  if (baseEndpoint.startsWith('/tasks/') && method === 'PUT') {
+    const id = baseEndpoint.replace('/tasks/', '');
     const body = JSON.parse(options.body as string);
     return MockTaskService.update(id, body);
   }
   
-  if (endpoint.startsWith('/tasks/') && method === 'DELETE') {
-    const id = endpoint.replace('/tasks/', '');
+  if (baseEndpoint.startsWith('/tasks/') && method === 'DELETE') {
+    const id = baseEndpoint.replace('/tasks/', '');
     return MockTaskService.delete(id);
   }
   
   // Flokkavirkni
-  if (endpoint === '/categories' && method === 'GET') {
+  if (baseEndpoint === '/categories' && method === 'GET') {
     return MockCategoryService.getAll();
   }
   
-  if (endpoint.startsWith('/categories/') && method === 'GET') {
-    const id = endpoint.replace('/categories/', '');
+  if (baseEndpoint.startsWith('/categories/') && method === 'GET') {
+    const id = baseEndpoint.replace('/categories/', '');
     return MockCategoryService.getById(id);
   }
   
-  if (endpoint === '/categories' && method === 'POST') {
+  if (baseEndpoint === '/categories' && method === 'POST') {
     const body = JSON.parse(options.body as string);
     return MockCategoryService.create(body);
   }
   
-  if (endpoint.startsWith('/categories/') && method === 'PUT') {
-    const id = endpoint.replace('/categories/', '');
+  if (baseEndpoint.startsWith('/categories/') && method === 'PUT') {
+    const id = baseEndpoint.replace('/categories/', '');
     const body = JSON.parse(options.body as string);
     return MockCategoryService.update(id, body);
   }
   
-  if (endpoint.startsWith('/categories/') && method === 'DELETE') {
-    const id = endpoint.replace('/categories/', '');
+  if (baseEndpoint.startsWith('/categories/') && method === 'DELETE') {
+    const id = baseEndpoint.replace('/categories/', '');
     return MockCategoryService.delete(id);
   }
   
   // Taga virkni
-  if (endpoint === '/tags' && method === 'GET') {
+  if (baseEndpoint === '/tags' && method === 'GET') {
     return MockTagService.getAll();
   }
   

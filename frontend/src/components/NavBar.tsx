@@ -22,23 +22,23 @@ export default function NavBar() {
           </Link>
 
           <nav className="flex items-center gap-6">
-            <Link href="/" className={isActive("/")}>
+            <Link href="/" className={`hover:text-blue-400 ${isActive("/")}`}>
               Forsíða
             </Link>
-            <Link href="/verkefni" className={isActive("/verkefni")}>
+            <Link href="/verkefni" className={`hover:text-blue-400 ${isActive("/verkefni")}`}>
               Verkefni
             </Link>
-            <Link href="/flokkar" className={isActive("/flokkar")}>
+            <Link href="/flokkar" className={`hover:text-blue-400 ${isActive("/flokkar")}`}>
               Flokkar
             </Link>
             
             {user ? (
               <>
-                <Link href="/myndir" className={isActive("/myndir")}>
+                <Link href="/myndir" className={`hover:text-blue-400 ${isActive("/myndir")}`}>
                   Myndir
                 </Link>
                 {user.isAdmin && (
-                  <Link href="/admin" className={isActive("/admin")}>
+                  <Link href="/admin" className={`hover:text-blue-400 ${isActive("/admin")}`}>
                     Stjórnborð
                   </Link>
                 )}

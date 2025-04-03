@@ -43,6 +43,12 @@ export default function ImagesPage() {
       return;
     }
     
+    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+    if (!cloudName) {
+      setError("Cloudinary stillingar vantar");
+      return;
+    }
+    
     const formData = new FormData();
     formData.append("file", selectedFile);
     formData.append("upload_preset", "verkefnalisti"); // Þú þarft að búa til upload preset á Cloudinary
@@ -53,55 +59,19 @@ export default function ImagesPage() {
     setSuccess("");
     
     try {
-      // Fyrst reynum við að nota bakendann ef hann styður mynda-upphleðslu
-      try {
-        const token = localStorage.getItem("token");
-        
-        // Búum til FormData fyrir bakendann
-        const backendFormData = new FormData();
-        backendFormData.append("image", selectedFile);
-        
-        const backendResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/images/upload`, {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          body: backendFormData,
-        });
-        
-        // Ef bakendinn styður þetta, þá notum við hann
-        if (backendResponse.ok) {
-          const data = await backendResponse.json();
-          setUploadedImageUrl(data.url || data.secure_url);
-          setSuccess("Mynd var hlaðið upp!");
-          
-          // Hreinsum upp
-          setSelectedFile(null);
-          if (previewUrl) {
-            URL.revokeObjectURL(previewUrl);
-            setPreviewUrl(null);
-          }
-          setUploading(false);
-          return;
-        }
-        
-        // Ef bakendinn styður það ekki (404 t.d.), þá förum við í Plan B
-        console.log("Backend image upload not available, using direct Cloudinary upload");
-      } catch (backendError) {
-        console.warn("Backend image upload failed, using direct Cloudinary upload", backendError);
-      }
+      // Nota beint Cloudinary - fjarlægja flækju með bakendatilraunum
+      const cloudinaryUrl = `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`;
+      console.log(`Hleð beint upp á Cloudinary: ${cloudinaryUrl}`);
       
-      // Plan B: Notum beina upphleðslu á Cloudinary
-      const response = await fetch(
-        `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`,
-        {
-          method: "POST",
-          body: formData,
-        }
-      );
+      const response = await fetch(cloudinaryUrl, {
+        method: "POST",
+        body: formData,
+      });
       
       if (!response.ok) {
-        throw new Error(`Villa við upphleðslu: ${response.status}`);
+        const errorText = await response.text();
+        console.error("Cloudinary API villa:", errorText);
+        throw new Error(`Villa við upphleðslu: ${response.status} - ${errorText}`);
       }
       
       const data = await response.json();
@@ -114,9 +84,9 @@ export default function ImagesPage() {
         URL.revokeObjectURL(previewUrl);
         setPreviewUrl(null);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Upphleðsla mistókst:", err);
-      setError("Villa kom upp við að hlaða upp mynd");
+      setError(`Villa kom upp við að hlaða upp mynd: ${err.message || 'Óskilgreind villa'}`);
     } finally {
       setUploading(false);
     }
