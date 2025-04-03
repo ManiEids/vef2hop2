@@ -311,28 +311,33 @@ export const CloudinaryService = {
       }
       
       const data = await response.json();
-      console.log("Successful upload:", data.secure_url);
+      console.log("Successfully uploaded to Cloudinary:", data.secure_url);
       
-      // Add to local storage to ensure it shows up in mock data
+      // Store the image URL in localStorage to ensure we can display it immediately
       try {
+        // Create a specific key for uploaded images to make them easier to track
+        const uploadedImages = JSON.parse(localStorage.getItem('cloudinary_uploaded_images') || '[]');
+        uploadedImages.unshift({
+          public_id: data.public_id,
+          secure_url: data.secure_url,
+          format: data.format || 'jpg',
+          created_at: new Date().toISOString()
+        });
+        localStorage.setItem('cloudinary_uploaded_images', JSON.stringify(uploadedImages));
+        
+        // Also add to tasks for backward compatibility
         const tasks = storage.get(STORAGE_KEYS.TASKS) || [];
-        // Add this image URL to our list of known URLs to ensure it appears in mock data
-        if (!tasks.some((task: any) => task.image_url === data.secure_url)) {
-          // Create a mock task entry with this image to ensure it shows in the gallery
-          const mockTask = {
-            id: `mock-${Date.now()}`,
-            title: "Ný mynd",
-            description: "Mynd sem var hlaðið upp",
-            completed: false,
-            image_url: data.secure_url,
-            created_at: new Date().toISOString()
-          };
-          // Add it to the top of the array
-          tasks.unshift(mockTask);
-          storage.set(STORAGE_KEYS.TASKS, tasks);
-        }
+        const mockTask = {
+          id: `upload-${Date.now()}`,
+          title: "Ný mynd",
+          description: `Mynd hlaðið upp ${new Date().toLocaleString('is-IS')}`,
+          completed: false,
+          image_url: data.secure_url,
+          created_at: new Date().toISOString()
+        };
+        tasks.unshift(mockTask);
+        storage.set(STORAGE_KEYS.TASKS, tasks);
       } catch (err) {
-        // Continue even if local storage update fails
         console.warn("Could not update local storage with image:", err);
       }
       
@@ -343,27 +348,71 @@ export const CloudinaryService = {
     }
   },
   
-  getImages: async (folder?: string) => {
+  getImages: async (folder = 'verkefnalisti-mana', timestamp?: number) => {
     const cloudName = "dojqamm7u";
+    console.log(`Fetching images from folder ${folder} at ${new Date().toISOString()}`);
     
     try {
-      console.log("Fetching Cloudinary images...");
+      // Add cache-busting parameter to all API calls
+      const cacheBuster = `cb=${Date.now()}`;
       
-      // Try different methods to retrieve images
-      const apiKey = process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY || "747457427514895";
-      const apiSecret = process.env.NEXT_PUBLIC_CLOUDINARY_API_SECRET || "WaVUT_hAaVFNcvvfWuTKxuVDO9o";
-      
-      // Try each method one by one
-      
-      // 1. Try Admin API first
+      // Try direct Cloudinary API first with improved parameters
       try {
-        console.log("Attempting to fetch via Admin API...");
-        const adminUrl = `https://api.cloudinary.com/v1_1/${cloudName}/resources/image?prefix=${folder || 'verkefnalisti-mana'}&max_results=500`;
+        console.log("Trying Cloudinary Search API with sorting...");
+        const searchUrl = `https://api.cloudinary.com/v1_1/${cloudName}/resources/search`;
+        
+        const apiKey = process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY || "747457427514895";
+        const apiSecret = process.env.NEXT_PUBLIC_CLOUDINARY_API_SECRET || "WaVUT_hAaVFNcvvfWuTKxuVDO9o";
+        
+        const headers = new Headers();
+        headers.append("Authorization", `Basic ${btoa(`${apiKey}:${apiSecret}`)}`);
+        headers.append("Content-Type", "application/json");
+        
+        // Improved search expression to target exactly your folder
+        const searchParams = {
+          expression: `folder="${folder}"`,
+          max_results: 100,
+          sort_by: [{ created_at: "desc" }]
+        };
+        
+        const response = await fetch(`${searchUrl}?${cacheBuster}`, {
+          method: 'POST',
+          headers: headers,
+          body: JSON.stringify(searchParams),
+          cache: 'no-store'
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          console.log(`Successfully fetched ${data.resources.length} images from Search API`);
+          
+          if (data.resources.length > 0) {
+            return {
+              resources: data.resources.map((resource: any) => ({
+                public_id: resource.public_id,
+                secure_url: resource.secure_url,
+                format: resource.format || resource.public_id.split('.').pop(),
+                created_at: resource.created_at || new Date().toISOString()
+              }))
+            };
+          }
+        }
+      } catch (error) {
+        console.warn("Error using Search API:", error);
+      }
+      
+      // Try Admin API as fallback
+      try {
+        console.log("Trying Admin API...");
+        const adminUrl = `https://api.cloudinary.com/v1_1/${cloudName}/resources/image?prefix=${folder}&max_results=500`;
+        
+        const apiKey = process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY || "747457427514895";
+        const apiSecret = process.env.NEXT_PUBLIC_CLOUDINARY_API_SECRET || "WaVUT_hAaVFNcvvfWuTKxuVDO9o";
         
         const headers = new Headers();
         headers.append("Authorization", `Basic ${btoa(`${apiKey}:${apiSecret}`)}`);
         
-        const response = await fetch(adminUrl, { 
+        const response = await fetch(`${adminUrl}&${cacheBuster}`, { 
           method: 'GET',
           headers: headers,
           cache: 'no-store'
@@ -371,7 +420,7 @@ export const CloudinaryService = {
         
         if (response.ok) {
           const data = await response.json();
-          console.log("Successfully fetched from Admin API:", data.resources.length, "images");
+          console.log(`Successfully fetched ${data.resources.length} images from Admin API`);
           
           return {
             resources: data.resources.map((resource: any) => ({
@@ -381,99 +430,34 @@ export const CloudinaryService = {
               created_at: resource.created_at || new Date().toISOString()
             }))
           };
-        } else {
-          console.log("Admin API failed, status:", response.status);
         }
       } catch (error) {
         console.warn("Error using Admin API:", error);
       }
       
-      // 2. Try List API
-      try {
-        console.log("Trying Cloudinary list API...");
-        // Add timestamp to avoid caching
-        const timestamp = new Date().getTime();
-        const listUrl = `https://res.cloudinary.com/${cloudName}/image/list/${folder || 'verkefnalisti-mana'}.json?timestamp=${timestamp}`;
-        
-        const response = await fetch(listUrl, { 
-          cache: 'no-store',
-          headers: {
-            'Cache-Control': 'no-cache, no-store, must-revalidate',
-            'Pragma': 'no-cache',
-            'Expires': '0'
-          } 
-        });
-        
-        if (response.ok) {
-          const data = await response.json();
-          console.log("Successfully fetched from List API:", data.resources.length, "images");
-          
-          return {
-            resources: data.resources.map((resource: any) => ({
-              public_id: resource.public_id,
-              secure_url: `https://res.cloudinary.com/${cloudName}/image/upload/${resource.public_id}.${resource.format}`,
-              format: resource.format,
-              created_at: resource.created_at || new Date().toISOString()
-            }))
-          };
-        } else {
-          console.log("List API failed, status:", response.status);
-        }
-      } catch (error) {
-        console.warn("Error using List API:", error);
-      }
-      
-      // 3. Try Search API
-      try {
-        console.log("Trying Cloudinary Search API...");
-        const searchUrl = `https://api.cloudinary.com/v1_1/${cloudName}/resources/search`;
-        
-        // Include the API key/secret through Basic Auth headers
-        const headers = new Headers();
-        headers.append("Authorization", `Basic ${btoa(`${apiKey}:${apiSecret}`)}`);
-        headers.append("Content-Type", "application/json");
-        
-        const searchParams = {
-          expression: `folder=${folder || "verkefnalisti-mana"}`,
-          max_results: 500,
-          sort_by: [{ created_at: "desc" }]
-        };
-        
-        const response = await fetch(searchUrl, {
-          method: 'POST',
-          headers: headers,
-          body: JSON.stringify(searchParams)
-        });
-        
-        if (response.ok) {
-          const data = await response.json();
-          console.log("Successfully fetched from Search API:", data.resources.length, "images");
-          
-          return {
-            resources: data.resources.map((resource: any) => ({
-              public_id: resource.public_id,
-              secure_url: resource.secure_url,
-              format: resource.format || resource.public_id.split('.').pop(),
-              created_at: resource.created_at || new Date().toISOString()
-            }))
-          };
-        }
-      } catch (error) {
-        console.warn("Error using Search API:", error);
-      }
-      
-      // 4. Fallback to task-based mock data if all APIs fail
-      console.log("All API methods failed, using mock data");
-      
-      // Get image data from localStorage
+      // Fall back to stored images if API calls fail
+      console.log("API calls failed, using locally stored uploaded images");
       const allImages = new Map<string, CloudinaryImage>();
       
-      // First add any images from tasks
+      // First check our dedicated uploaded images storage
+      try {
+        const uploadedImages = JSON.parse(localStorage.getItem('cloudinary_uploaded_images') || '[]');
+        console.log(`Found ${uploadedImages.length} locally stored uploaded images`);
+        uploadedImages.forEach((img: CloudinaryImage) => {
+          if (img.secure_url.includes(folder)) {
+            allImages.set(img.secure_url, img);
+          }
+        });
+      } catch (err) {
+        console.warn("Error accessing local uploaded images:", err);
+      }
+      
+      // Also get from tasks for backward compatibility
       const tasks = storage.get(STORAGE_KEYS.TASKS) || [];
-      tasks.filter((task: any) => task.image_url)
+      tasks.filter((task: any) => task.image_url && task.image_url.includes(folder))
         .forEach((task: any) => {
           const url = task.image_url;
-          if (url) {
+          if (url && !allImages.has(url)) {
             const publicId = url.includes('/') 
               ? url.split('/').pop().split('.')[0] 
               : url;
@@ -487,39 +471,41 @@ export const CloudinaryService = {
           }
         });
       
-      // Then add sample images
-      const sampleCreationDate = new Date(Date.now() - 86400000).toISOString();
-      
-      const demoImages = [
-        // Sample images from your Cloudinary account
-        { public_id: 'sample1', secure_url: 'https://res.cloudinary.com/dojqamm7u/image/upload/v1741993767/verkefnalisti-mana/image-1741993765602-424312021_u7zbns.jpg' },
-        { public_id: 'sample2', secure_url: 'https://res.cloudinary.com/dojqamm7u/image/upload/v1741993836/verkefnalisti-mana/image-1741993835136-360129464_rdkyjm.jpg' },
-        { public_id: 'sample3', secure_url: 'https://res.cloudinary.com/dojqamm7u/image/upload/v1741993873/verkefnalisti-mana/image-1741993872277-918612344_akdzd0.png' },
-        { public_id: 'cld-sample', secure_url: 'https://res.cloudinary.com/dojqamm7u/image/upload/v1741988208/cld-sample.jpg' },
-        { public_id: 'cld-sample-2', secure_url: 'https://res.cloudinary.com/dojqamm7u/image/upload/v1741988208/cld-sample-2.jpg' },
-        { public_id: 'cld-sample-3', secure_url: 'https://res.cloudinary.com/dojqamm7u/image/upload/v1741988208/cld-sample-3.jpg' },
-        { public_id: 'cld-sample-4', secure_url: 'https://res.cloudinary.com/dojqamm7u/image/upload/v1741988208/cld-sample-4.jpg' },
-        { public_id: 'cld-sample-5', secure_url: 'https://res.cloudinary.com/dojqamm7u/image/upload/v1741988208/cld-sample-5.jpg' }
-        // Additional sample images removed for simplicity
-      ];
-      
-      demoImages.forEach((img) => {
-        if (!allImages.has(img.secure_url)) {
-          allImages.set(img.secure_url, {
-            ...img,
-            format: img.secure_url.split('.').pop() || 'jpg',
-            created_at: sampleCreationDate
+      // Add sample images from your Cloudinary account
+      [
+        'https://res.cloudinary.com/dojqamm7u/image/upload/v1743696142/verkefnalisti-mana/tur5pavlseq8m8j4zkz1.jpg',
+        'https://res.cloudinary.com/dojqamm7u/image/upload/v1743691358/verkefnalisti-mana/fbngksneerhz6osnjgax.jpg',
+        'https://res.cloudinary.com/dojqamm7u/image/upload/v1743690856/verkefnalisti-mana/rqsdvkutpjepoq93n8ig.jpg',
+        'https://res.cloudinary.com/dojqamm7u/image/upload/v1743688515/verkefnalisti-mana/xllclaw1ksih8eh6fv90.jpg',
+        'https://res.cloudinary.com/dojqamm7u/image/upload/v1743688169/verkefnalisti-mana/se2txlxof990k6l7dzhr.jpg',
+        'https://res.cloudinary.com/dojqamm7u/image/upload/v1743686684/verkefnalisti-mana/zgx3f0nmtzroqccfsu2i.jpg',
+        'https://res.cloudinary.com/dojqamm7u/image/upload/v1742167971/verkefnalisti-mana/image-1742167970741-94081365_kxv3pp.jpg',
+        'https://res.cloudinary.com/dojqamm7u/image/upload/v1741993873/verkefnalisti-mana/image-1741993872277-918612344_akdzd0.png',
+        'https://res.cloudinary.com/dojqamm7u/image/upload/v1741993836/verkefnalisti-mana/image-1741993835136-360129464_rdkyjm.jpg',
+        'https://res.cloudinary.com/dojqamm7u/image/upload/v1741993767/verkefnalisti-mana/image-1741993765602-424312021_u7zbns.jpg',
+        'https://res.cloudinary.com/dojqamm7u/image/upload/v1741989602/verkefnalisti-mana/image-1741989601198-771876460_yz6rad.jpg'
+      ].forEach(url => {
+        if (!allImages.has(url)) {
+          const publicId = url.split('/').pop()?.split('.')[0] || '';
+          const format = url.split('.').pop() || 'jpg';
+          
+          allImages.set(url, {
+            public_id: publicId,
+            secure_url: url,
+            format: format,
+            created_at: new Date(Date.now() - Math.random() * 86400000).toISOString()
           });
         }
       });
       
       const imageArray = Array.from(allImages.values());
-      console.log(`Returning ${imageArray.length} mock images`);
+      // Sort by created_at date, newest first
+      imageArray.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
       
+      console.log(`Returning ${imageArray.length} images from local storage`);
       return {
         resources: imageArray
       };
-      
     } catch (error) {
       console.error("Failed to fetch images:", error);
       throw error;

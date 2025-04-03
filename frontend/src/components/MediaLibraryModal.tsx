@@ -63,24 +63,27 @@ export default function MediaLibraryModal({
       setLoading(true);
       setError("");
 
-      const imageList = await CloudinaryService.getImages("verkefnalisti-mana");
+      // Add timestamp to avoid caching issues
+      const timestamp = Date.now();
+      // Always use the correct folder name
+      const imageList = await CloudinaryService.getImages("verkefnalisti-mana", timestamp);
 
-      // Remove duplicates by URL
+      // Process and deduplicate images
       const uniqueImages = new Map();
       imageList.resources.forEach((img: CloudinaryImage) => {
         uniqueImages.set(img.secure_url, img);
       });
 
-      // Convert to array and sort by created_at date (newest first)
+      // Sort by created_at date (newest first)
       const sortedImages = Array.from(uniqueImages.values()).sort((a, b) => {
         return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
       });
 
       setImages(sortedImages);
-      console.log(`Fetched ${sortedImages.length} images for media library`);
+      console.log(`Loaded ${sortedImages.length} images into media library`);
     } catch (err: any) {
       setError("Villa við að sækja myndir");
-      console.error(err);
+      console.error("Error fetching images:", err);
     } finally {
       setLoading(false);
     }
@@ -136,20 +139,25 @@ export default function MediaLibraryModal({
     setError("");
 
     try {
+      // Upload to verkefnalisti-mana folder
       const cloudinaryUrl = await CloudinaryService.uploadImage(selectedFile);
       setSelectedImage(cloudinaryUrl);
       setUploadSuccess(true);
 
-      // Always refresh the library after successful upload
-      fetchImages();
+      // Clear file selection
+      setSelectedFile(null);
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+      setPreviewUrl(null);
 
-      // After successful upload, switch to library tab and select the new image
+      // Give more time for Cloudinary to process and then refresh the library
       setTimeout(() => {
+        console.log("Refreshing library after upload");
+        fetchImages();
         setSelectedTab("library");
-      }, 1000);
+      }, 2500);
     } catch (err: any) {
       setError(err.message || "Villa við upphleðslu");
-      console.error("Upphleðsla mistókst:", err);
+      console.error("Upload failed:", err);
     } finally {
       setUploading(false);
     }

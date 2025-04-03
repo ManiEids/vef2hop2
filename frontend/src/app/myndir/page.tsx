@@ -41,7 +41,10 @@ export default function ImagesPage() {
     try {
       setLoadingImages(true);
       setImageError("");
-      const response = await CloudinaryService.getImages("verkefnalisti-mana");
+
+      // Always use the correct folder name and add timestamp
+      const timestamp = Date.now();
+      const response = await CloudinaryService.getImages("verkefnalisti-mana", timestamp);
 
       // Sort images by creation date (newest first)
       const sortedImages = [...response.resources].sort((a, b) => {
@@ -49,9 +52,9 @@ export default function ImagesPage() {
       });
 
       setImages(sortedImages);
-      console.log(`Sótti ${sortedImages.length} myndir frá Cloudinary`);
+      console.log(`Fetched ${sortedImages.length} images from Cloudinary`);
     } catch (err: any) {
-      console.error("Villa við að sækja myndir:", err);
+      console.error("Error fetching images:", err);
       setImageError("Villa við að sækja myndir");
     } finally {
       setLoadingImages(false);
@@ -136,16 +139,19 @@ export default function ImagesPage() {
       setUploadedImageUrl(data.secure_url);
       setSuccess("Mynd var hlaðið upp í Cloudinary!");
 
+      // Clear form
       setSelectedFile(null);
       if (previewUrl) {
         URL.revokeObjectURL(previewUrl);
         setPreviewUrl(null);
       }
 
-      // After successful upload, refresh the image gallery immediately
+      // Wait a bit longer to ensure Cloudinary has processed the image
+      // Then refresh the gallery with new timestamp to avoid cache
       setTimeout(() => {
+        console.log("Refreshing gallery with uploaded image:", data.secure_url);
         fetchImages();
-      }, 1000);
+      }, 2500);
     } catch (err: any) {
       console.error("Upphleðsla mistókst:", err);
       setError(`${err.message || "Óskilgreind villa"}`);
@@ -336,12 +342,12 @@ export default function ImagesPage() {
             <div className="mb-4 text-sm text-gray-500">
               <p>Sýni {images.length} myndir, nýjustu efst</p>
             </div>
-            
-            <div 
-              className="overflow-y-auto" 
-              style={{ 
+
+            <div
+              className="overflow-y-auto"
+              style={{
                 maxHeight: "70vh",
-                scrollBehavior: "smooth"
+                scrollBehavior: "smooth",
               }}
             >
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -378,11 +384,11 @@ export default function ImagesPage() {
                 ))}
               </div>
             </div>
-            
+
             {images.length > 12 && (
               <div className="mt-4 text-center">
-                <button 
-                  onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                <button
+                  onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
                   className="text-blue-500 hover:underline text-sm"
                 >
                   Fara efst á síðu
