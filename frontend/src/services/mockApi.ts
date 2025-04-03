@@ -38,8 +38,8 @@ interface Tag {
   name: string;
 }
 
-// Geymum gögn í localStorage
-const STORAGE_KEYS = {
+// Geymum gögn í localStorage - exportum til að nota í api.ts
+export const STORAGE_KEYS = {
   USERS: 'verkefnalisti_users',
   TASKS: 'verkefnalisti_tasks',
   CATEGORIES: 'verkefnalisti_categories',
@@ -145,8 +145,8 @@ const initialData = {
   ]
 };
 
-// Hjálparfall til að sækja og vista gögn í localStorage
-const storage = {
+// Hjálparfall fyrir localStorage - exportum til að nota í api.ts
+export const storage = {
   get: (key: string): any => {
     if (typeof window === 'undefined') return null;
     const item = localStorage.getItem(key);

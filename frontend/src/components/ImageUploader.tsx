@@ -14,7 +14,7 @@ export default function ImageUploader({ initialImageUrl = "", onImageSelected }:
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
 
-  // Update this to match your new Cloudinary preset
+  // Sjálfgefið preset fyrir Cloudinary
   const DEFAULT_PRESET = "verkefnalisti-uploads";
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -44,10 +44,10 @@ export default function ImageUploader({ initialImageUrl = "", onImageSelected }:
       return;
     }
 
-    // Hardcoded cloud name - matches your account
+    // Notum fast cloudName
     const cloudName = "dojqamm7u";
 
-    // Use the preset you created in Cloudinary dashboard
+    // Notum sjálfgefið preset eða það sem er í localStorage
     const uploadPreset = localStorage.getItem("cloudinary_upload_preset") || DEFAULT_PRESET;
 
     const formData = new FormData();
@@ -60,7 +60,7 @@ export default function ImageUploader({ initialImageUrl = "", onImageSelected }:
 
     try {
       const cloudinaryUrl = `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`;
-      console.log(`Hleð upp mynd á Cloudinary með preset: ${uploadPreset}`);
+      console.log(`Hleð upp mynd með preset: ${uploadPreset}`);
 
       const response = await fetch(cloudinaryUrl, {
         method: "POST",
@@ -76,12 +76,11 @@ export default function ImageUploader({ initialImageUrl = "", onImageSelected }:
         try {
           const errorData = JSON.parse(errorText);
           if (errorData?.error?.message === "Upload preset not found") {
-            errorMessage = `Upload preset '${uploadPreset}' fannst ekki. Vinsamlegast búðu til nýtt preset í Cloudinary stjórnborðinu og stilltu það á Unsigned.`;
+            errorMessage = `Upload preset '${uploadPreset}' fannst ekki. Athugaðu stillingar á myndasíðu.`;
           } else if (errorData?.error?.message) {
             errorMessage = `Cloudinary villa: ${errorData.error.message}`;
           }
         } catch (e) {
-          // If error text is not JSON, use it directly
           errorMessage = `Villa: ${errorText}`;
         }
 

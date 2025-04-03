@@ -1,6 +1,9 @@
 // Grunnur fyrir API köll
 import { MockAuthService, MockTaskService, MockCategoryService, MockTagService } from './mockApi';
 
+// Bæta við import frá mockApi.ts fyrir CloudinaryService
+import { STORAGE_KEYS, storage } from './mockApi';
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 // Færanlegt flag til að nota mökk í staðinn fyrir bakenda
 const MOCKED_FEATURES = {
@@ -302,6 +305,79 @@ export const CloudinaryService = {
       return data.secure_url;
     } catch (error) {
       console.error("Image upload failed:", error);
+      throw error;
+    }
+  },
+  
+  // sækja myndir af cloudinary 
+  getImages: async (folder?: string) => {
+    const cloudName = "dojqamm7u";
+    
+    try {
+      // Fyrir mock - skila fyrri myndum frá localStorage
+      const mockImages = [];
+      
+      // Sækja verkefni sem innihalda myndir
+      const tasks = storage.get(STORAGE_KEYS.TASKS) || [];
+      const imagesFromTasks = tasks
+        .filter((task: any) => task.image_url)
+        .map((task: any) => ({
+          public_id: task.image_url.split('/').pop().split('.')[0],
+          secure_url: task.image_url,
+          format: task.image_url.split('.').pop(),
+          created_at: task.created_at
+        }));
+      
+      // Bæta við sýnishornum ef engar myndir
+      if (imagesFromTasks.length === 0) {
+        mockImages.push({
+          public_id: 'sample1',
+          secure_url: 'https://res.cloudinary.com/dojqamm7u/image/upload/v1741993767/verkefnalisti-mana/image-1741993765602-424312021_u7zbns.jpg',
+          format: 'jpg',
+          created_at: new Date().toISOString()
+        });
+        mockImages.push({
+          public_id: 'sample2',
+          secure_url: 'https://res.cloudinary.com/dojqamm7u/image/upload/v1741993836/verkefnalisti-mana/image-1741993835136-360129464_rdkyjm.jpg',
+          format: 'jpg',
+          created_at: new Date().toISOString()
+        });
+        mockImages.push({
+          public_id: 'sample3',
+          secure_url: 'https://res.cloudinary.com/dojqamm7u/image/upload/v1741993873/verkefnalisti-mana/image-1741993872277-918612344_akdzd0.png',
+          format: 'png',
+          created_at: new Date().toISOString()
+        });
+      }
+      
+      return {
+        resources: [...mockImages, ...imagesFromTasks]
+      };
+      
+      // Athugasemd: Í alvöru útfærslu myndum við nota Cloudinary API með lyklum
+      /*
+      const apiSecret = process.env.CLOUDINARY_API_SECRET;
+      const apiKey = process.env.CLOUDINARY_API_KEY;
+      
+      const timestamp = Math.round(new Date().getTime() / 1000);
+      const signature = generateSignature({ timestamp, folder });
+      
+      const url = `https://api.cloudinary.com/v1_1/${cloudName}/resources/image?prefix=${folder || ''}&max_results=30`;
+      
+      const response = await fetch(url, {
+        headers: {
+          'Authorization': `Basic ${btoa(`${apiKey}:${apiSecret}`)}`
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch images: ${response.status}`);
+      }
+      
+      return await response.json();
+      */
+    } catch (error) {
+      console.error("Error fetching images:", error);
       throw error;
     }
   }
