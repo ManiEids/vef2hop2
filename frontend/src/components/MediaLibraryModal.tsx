@@ -40,6 +40,7 @@ export default function MediaLibraryModal({
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [page, setPage] = useState(1);
   const [imagesPerPage, setImagesPerPage] = useState(12);
+  const [showDebugInfo, setShowDebugInfo] = useState(false);
   
   // Fetch images from Cloudinary when modal opens
   useEffect(() => {
@@ -65,9 +66,11 @@ export default function MediaLibraryModal({
     try {
       setLoading(true);
       setError("");
+      setPage(1); // Reset to page 1 when fetching new images
+      
       const imageList = await CloudinaryService.getImages("verkefnalisti-mana");
       
-      // Fyrir öryggi - fjarlægja tvítekningar eftir URL
+      // Remove duplicates by URL
       const uniqueImages = new Map();
       imageList.resources.forEach((img: CloudinaryImage) => {
         uniqueImages.set(img.secure_url, img);
@@ -80,7 +83,7 @@ export default function MediaLibraryModal({
         });
       
       setImages(sortedImages);
-      console.log(`Sækja myndir: ${sortedImages.length} einstakar myndir fundust`);
+      console.log(`Fetched ${sortedImages.length} images for media library`);
     } catch (err: any) {
       setError("Villa við að sækja myndir");
       console.error(err);
@@ -232,7 +235,7 @@ export default function MediaLibraryModal({
                   <div className="flex justify-between items-center mb-4">
                     <p className="text-sm text-gray-500">
                       {images.length > imagesPerPage 
-                        ? `Sýni ${paginatedImages.length} af ${images.length} myndum (síða ${page}/${totalPages})` 
+                        ? `Sýni ${Math.min(paginatedImages.length, imagesPerPage)} af ${images.length} myndum (síða ${page}/${totalPages})` 
                         : `Sýni allar ${images.length} myndir, nýjustu efst`}
                     </p>
                     <div className="flex items-center gap-2">
@@ -244,14 +247,30 @@ export default function MediaLibraryModal({
                         <option value="grid">Grid útlit</option>
                         <option value="list">Lista útlit</option>
                       </select>
+                      <button
+                        onClick={() => setShowDebugInfo(!showDebugInfo)}
+                        className="p-1 text-xs bg-gray-100 rounded"
+                      >
+                        🐞
+                      </button>
                     </div>
                   </div>
                   
+                  {showDebugInfo && (
+                    <div className="bg-gray-100 border border-gray-300 p-2 mb-4 text-xs rounded">
+                      <p>Total images: {images.length}</p>
+                      <p>Current page: {page}</p>
+                      <p>Images per page: {imagesPerPage}</p>
+                      <p>Total pages: {totalPages}</p>
+                      <p>Showing: {(page-1)*imagesPerPage+1} to {Math.min(page*imagesPerPage, images.length)}</p>
+                    </div>
+                  )}
+                  
                   {viewMode === "grid" ? (
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                      {paginatedImages.map((image) => (
+                      {paginatedImages.map((image, index) => (
                         <div 
-                          key={image.public_id} 
+                          key={`${image.public_id}-${index}`}
                           className={`relative aspect-square rounded-md overflow-hidden cursor-pointer border-2 ${
                             selectedImage === image.secure_url 
                               ? "border-blue-500" 
@@ -278,9 +297,9 @@ export default function MediaLibraryModal({
                     </div>
                   ) : (
                     <div className="flex flex-col gap-2">
-                      {paginatedImages.map((image) => (
+                      {paginatedImages.map((image, index) => (
                         <div 
-                          key={image.public_id}
+                          key={`${image.public_id}-${index}`}
                           className={`flex items-center p-2 rounded-md cursor-pointer ${
                             selectedImage === image.secure_url 
                               ? "bg-blue-100" 
@@ -312,10 +331,18 @@ export default function MediaLibraryModal({
                     </div>
                   )}
                   
-                  {/* Pagination controls */}
+                  {/* Enhanced pagination controls with first/last buttons */}
                   {images.length > imagesPerPage && (
                     <div className="mt-6 flex justify-center">
                       <div className="flex items-center gap-2">
+                        <button 
+                          onClick={() => setPage(1)}
+                          disabled={page === 1}
+                          className="px-2 py-1 bg-gray-200 rounded-md disabled:opacity-50 text-sm"
+                          title="First page"
+                        >
+                          «
+                        </button>
                         <button 
                           onClick={() => setPage(p => Math.max(1, p - 1))}
                           disabled={page === 1}
@@ -324,9 +351,11 @@ export default function MediaLibraryModal({
                           Fyrri
                         </button>
                         
-                        <span className="text-sm">
-                          {page} af {totalPages}
-                        </span>
+                        <div className="flex items-center mx-1">
+                          <span className="text-sm px-2">
+                            Síða <span className="font-semibold">{page}</span> af {totalPages}
+                          </span>
+                        </div>
                         
                         <button 
                           onClick={() => setPage(p => Math.min(totalPages, p + 1))}
@@ -334,6 +363,14 @@ export default function MediaLibraryModal({
                           className="px-3 py-1 bg-gray-200 rounded-md disabled:opacity-50 text-sm"
                         >
                           Næsta
+                        </button>
+                        <button 
+                          onClick={() => setPage(totalPages)}
+                          disabled={page === totalPages}
+                          className="px-2 py-1 bg-gray-200 rounded-md disabled:opacity-50 text-sm"
+                          title="Last page"
+                        >
+                          »
                         </button>
                       </div>
                     </div>

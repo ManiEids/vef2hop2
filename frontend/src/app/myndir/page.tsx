@@ -32,6 +32,7 @@ export default function ImagesPage() {
   const [page, setPage] = useState(1);
   const [imagesPerPage, setImagesPerPage] = useState(12);
   const [viewMode, setViewMode] = useState<"scroll" | "paginate">("scroll");
+  const [showDebugInfo, setShowDebugInfo] = useState(false);
 
   const { user } = useAuth();
 
@@ -54,6 +55,9 @@ export default function ImagesPage() {
 
       setImages(sortedImages);
       console.log(`Sækja myndir: ${sortedImages.length} einstakar myndir fundust`);
+      
+      // Reset to page 1 when getting new images
+      setPage(1);
     } catch (err: any) {
       console.error("Villa við að sækja myndir:", err);
       setImageError("Villa við að sækja myndir");
@@ -146,10 +150,11 @@ export default function ImagesPage() {
         setPreviewUrl(null);
       }
 
-      // After successful upload, refresh the image gallery immediately
+      // After successful upload, refresh the image gallery and switch to page 1
       setTimeout(() => {
         fetchImages();
-      }, 500);
+        setPage(1);
+      }, 1000);
     } catch (err: any) {
       console.error("Upphleðsla mistókst:", err);
       setError(`${err.message || "Óskilgreind villa"}`);
@@ -171,6 +176,8 @@ export default function ImagesPage() {
   const paginatedImages = viewMode === "paginate" 
     ? images.slice((page - 1) * imagesPerPage, page * imagesPerPage)
     : images;
+
+  const displayImages = viewMode === "paginate" ? paginatedImages : images;
 
   if (!user) {
     return (
@@ -311,6 +318,13 @@ export default function ImagesPage() {
               </select>
             </div>
             <button
+              onClick={() => setShowDebugInfo(!showDebugInfo)}
+              className="px-2 py-1 text-xs bg-gray-200 rounded-md"
+              title="Show/hide debug info"
+            >
+              🐞
+            </button>
+            <button
               onClick={fetchImages}
               className="bg-blue-500 hover:bg-blue-600 text-white text-sm px-3 py-1 rounded-md flex items-center gap-1"
               disabled={loadingImages}
@@ -346,6 +360,17 @@ export default function ImagesPage() {
           </div>
         )}
 
+        {showDebugInfo && (
+          <div className="bg-gray-100 border border-gray-300 p-2 mb-4 text-xs text-gray-700 rounded">
+            <p>Total images: {images.length}</p>
+            <p>View mode: {viewMode}</p>
+            <p>Current page: {page}</p>
+            <p>Items per page: {imagesPerPage}</p>
+            <p>Total pages: {totalPages}</p>
+            <p>Showing images: {viewMode === "paginate" ? `${(page-1)*imagesPerPage+1}-${Math.min(page*imagesPerPage, images.length)}` : "All"}</p>
+          </div>
+        )}
+
         {loadingImages ? (
           <div className="flex justify-center py-8">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
@@ -370,8 +395,8 @@ export default function ImagesPage() {
               }}
             >
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {paginatedImages.map((image) => (
-                  <div key={image.public_id} className="bg-gray-100 p-3 rounded-lg">
+                {displayImages.map((image, index) => (
+                  <div key={`${image.public_id}-${index}`} className="bg-gray-100 p-3 rounded-lg">
                     <div className="relative h-40 mb-2 bg-white rounded overflow-hidden">
                       <Image
                         src={image.secure_url}
@@ -404,9 +429,16 @@ export default function ImagesPage() {
               </div>
             </div>
             
-            {viewMode === "paginate" && totalPages > 1 && (
+            {(viewMode === "paginate" && totalPages > 1) && (
               <div className="mt-6 flex justify-center">
                 <div className="flex items-center gap-2">
+                  <button 
+                    onClick={() => setPage(1)}
+                    disabled={page === 1}
+                    className="px-2 py-1 bg-gray-200 rounded-md disabled:opacity-50 text-sm"
+                  >
+                    « Fyrsta
+                  </button>
                   <button 
                     onClick={() => setPage(p => Math.max(1, p - 1))}
                     disabled={page === 1}
@@ -450,6 +482,13 @@ export default function ImagesPage() {
                     className="px-3 py-1 bg-gray-200 rounded-md disabled:opacity-50"
                   >
                     Næsta
+                  </button>
+                  <button 
+                    onClick={() => setPage(totalPages)}
+                    disabled={page === totalPages}
+                    className="px-2 py-1 bg-gray-200 rounded-md disabled:opacity-50 text-sm"
+                  ></button>
+                    Síðasta »
                   </button>
                 </div>
               </div>

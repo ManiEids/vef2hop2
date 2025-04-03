@@ -317,185 +317,168 @@ export const CloudinaryService = {
     }
   },
   
-  // Uppfært til að sækja myndir beint frá Cloudinary þegar hægt er
   getImages: async (folder?: string) => {
     const cloudName = "dojqamm7u";
     
     try {
-      // Try to get all images directly from Cloudinary API using next_cursor for pagination
-      const getAllImages = async () => {
-        let allResources: any[] = [];
-        let hasMore = true;
-        let nextCursor = undefined;
-        
-        while (hasMore) {
-          try {
-            // Build the URL with cursor if available
-            let url = `https://res.cloudinary.com/${cloudName}/image/list/${folder || 'verkefnalisti-mana'}.json`;
-            if (nextCursor) {
-              url += `?next_cursor=${nextCursor}`;
-            }
-            
-            const response = await fetch(url);
-            
-            if (response.ok) {
-              const data = await response.json();
-              allResources = [...allResources, ...data.resources];
-              
-              // Check if there are more pages
-              if (data.next_cursor) {
-                nextCursor = data.next_cursor;
-              } else {
-                hasMore = false;
-              }
-            } else {
-              // If we get an error, stop trying to fetch more
-              hasMore = false;
-            }
-          } catch (error) {
-            console.log("Error fetching images page:", error);
-            hasMore = false;
-          }
-        }
-        
-        return allResources;
-      };
+      console.log("Attempting to fetch Cloudinary images...");
       
+      // ætti að nota bakenda en prófa 
+      const apiKey = process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY || "747457427514895";
+      
+      // nota admin
       try {
-        const allResources = await getAllImages();
+        // admin api url
+        const adminUrl = `https://api.cloudinary.com/v1_1/${cloudName}/resources/image?prefix=${folder || 'verkefnalisti-mana'}&max_results=500`;
         
-        if (allResources.length > 0) {
-          console.log(`Fetched ${allResources.length} images from Cloudinary`);
+        const headers = new Headers();
+        headers.append("Authorization", `Basic ${btoa(`${apiKey}:${process.env.NEXT_PUBLIC_CLOUDINARY_API_SECRET || ''}`)}`);
+        
+        // ætti að vera server side call
+        const response = await fetch(adminUrl, { 
+          method: 'GET',
+          headers: headers
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          console.log("Successfully fetched from Cloudinary Admin API:", data.resources.length, "images");
           
-          // Format for consistency
           return {
-            resources: allResources.map((resource: any) => ({
+            resources: data.resources.map((resource: any) => ({
+              public_id: resource.public_id,
+              secure_url: resource.secure_url,
+              format: resource.format,
+              created_at: resource.created_at || new Date().toISOString()
+            }))
+          };
+        } else {
+          console.log("Admin API failed, status:", response.status);
+        }
+      } catch (error) {
+        console.log("Error using Admin API:", error);
+      }
+      
+      // Second attempt: Try to get images directly from list API
+      try {
+        console.log("Trying Cloudinary list API...");
+        const listUrl = `https://res.cloudinary.com/${cloudName}/image/list/${folder || 'verkefnalisti-mana'}.json?timestamp=${Date.now()}`;
+        
+        const response = await fetch(listUrl, { cache: 'no-store' });
+        
+        if (response.ok) {
+          const data = await response.json();
+          console.log("Successfully fetched from List API:", data.resources.length, "images");
+          
+          return {
+            resources: data.resources.map((resource: any) => ({
               public_id: resource.public_id,
               secure_url: `https://res.cloudinary.com/${cloudName}/image/upload/${resource.public_id}.${resource.format}`,
               format: resource.format,
               created_at: resource.created_at || new Date().toISOString()
             }))
           };
+        } else {
+          console.log("List API failed, status:", response.status);
         }
       } catch (error) {
-        console.log("Failed to fetch images directly from Cloudinary, using mock");
+        console.log("Error using List API:", error);
       }
       
-      // If Cloudinary API fails, use mock
-      // Collect all possible images and remove duplicates
+      // Last attempt: Try direct search API (won't work in browser due to CORS)
+      try {
+        console.log("Trying Cloudinary Search API...");
+        const searchUrl = `https://api.cloudinary.com/v1_1/${cloudName}/resources/search`;
+        
+        const searchParams = {
+          expression: `folder=${folder || "verkefnalisti-mana"}`,
+          max_results: 500,
+          sort_by: [{ created_at: "desc" }]
+        };
+        
+        const response = await fetch(searchUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(searchParams)
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          console.log("Successfully fetched from Search API:", data.resources.length, "images");
+          
+          return {
+            resources: data.resources.map((resource: any) => ({
+              public_id: resource.public_id,
+              secure_url: resource.secure_url,
+              format: resource.format || resource.public_id.split('.').pop(),
+              created_at: resource.created_at || new Date().toISOString()
+            }))
+          };
+        }
+      } catch (error) {
+        console.log("Error using Search API:", error);
+      }
+      
+      // Fallback to mock data if all other methods fail
+      console.log("All API methods failed, using mock data");
+      
+      // Get basic list from localStorage for mock
       const allImages = new Map<string, CloudinaryImage>();
       
-      // Sækja verkefni sem innihalda myndir
+      // Add any task images first
       const tasks = storage.get(STORAGE_KEYS.TASKS) || [];
-      const imagesFromTasks = tasks
-        .filter((task: any) => task.image_url)
-        .map((task: any) => {
+      tasks.filter((task: any) => task.image_url)
+        .forEach((task: any) => {
           const url = task.image_url;
-          return {
+          allImages.set(url, {
             public_id: url.split('/').pop().split('.')[0],
             secure_url: url,
             format: url.split('.').pop(),
             created_at: task.created_at || new Date().toISOString()
-          } as CloudinaryImage;
+          });
         });
+      
+      // Add sample/demo images
+      const sampleCreationDate = new Date(Date.now() - 86400000).toISOString();
+      
+      const demoImages = [
+        // Manually add 20+ sample images to ensure we have enough for pagination testing
+        // First add the existing sample images
+        { public_id: 'sample1', secure_url: 'https://res.cloudinary.com/dojqamm7u/image/upload/v1741993767/verkefnalisti-mana/image-1741993765602-424312021_u7zbns.jpg' },
+        { public_id: 'sample2', secure_url: 'https://res.cloudinary.com/dojqamm7u/image/upload/v1741993836/verkefnalisti-mana/image-1741993835136-360129464_rdkyjm.jpg' },
+        { public_id: 'sample3', secure_url: 'https://res.cloudinary.com/dojqamm7u/image/upload/v1741993873/verkefnalisti-mana/image-1741993872277-918612344_akdzd0.png' },
+        { public_id: 'cld-sample', secure_url: 'https://res.cloudinary.com/dojqamm7u/image/upload/v1741988208/cld-sample.jpg' },
+        { public_id: 'cld-sample-2', secure_url: 'https://res.cloudinary.com/dojqamm7u/image/upload/v1741988208/cld-sample-2.jpg' },
+        { public_id: 'cld-sample-3', secure_url: 'https://res.cloudinary.com/dojqamm7u/image/upload/v1741988208/cld-sample-3.jpg' },
+        { public_id: 'cld-sample-4', secure_url: 'https://res.cloudinary.com/dojqamm7u/image/upload/v1741988208/cld-sample-4.jpg' },
+        { public_id: 'cld-sample-5', secure_url: 'https://res.cloudinary.com/dojqamm7u/image/upload/v1741988208/cld-sample-5.jpg' },
+        { public_id: 'coffee', secure_url: 'https://res.cloudinary.com/dojqamm7u/image/upload/v1741988207/samples/coffee.jpg' },
+        { public_id: 'woman-on-a-football-field', secure_url: 'https://res.cloudinary.com/dojqamm7u/image/upload/v1741988207/samples/woman-on-a-football-field.jpg' },
+        { public_id: 'upscale-face-1', secure_url: 'https://res.cloudinary.com/dojqamm7u/image/upload/v1741988208/samples/upscale-face-1.jpg' },
+        { public_id: 'logo', secure_url: 'https://res.cloudinary.com/dojqamm7u/image/upload/v1741988208/samples/logo.jpg' },
         
-      // Bæta myndum við Map eftir URL til að koma í veg fyrir tvítekningar
-      imagesFromTasks.forEach((img: CloudinaryImage) => {
-        allImages.set(img.secure_url, img);
-      });
-      
-      // Sample myndir - alltaf sýna fyrir dæmi
-      const sampleCreationDate = new Date(Date.now() - 86400000).toISOString(); // 1 day ago
-      const sampleImages: CloudinaryImage[] = [
-        {
-          public_id: 'sample1',
-          secure_url: 'https://res.cloudinary.com/dojqamm7u/image/upload/v1741993767/verkefnalisti-mana/image-1741993765602-424312021_u7zbns.jpg',
-          format: 'jpg',
-          created_at: sampleCreationDate
-        },
-        {
-          public_id: 'sample2',
-          secure_url: 'https://res.cloudinary.com/dojqamm7u/image/upload/v1741993836/verkefnalisti-mana/image-1741993835136-360129464_rdkyjm.jpg',
-          format: 'jpg',
-          created_at: sampleCreationDate
-        },
-        {
-          public_id: 'sample3',
-          secure_url: 'https://res.cloudinary.com/dojqamm7u/image/upload/v1741993873/verkefnalisti-mana/image-1741993872277-918612344_akdzd0.png',
-          format: 'png',
-          created_at: sampleCreationDate
-        },
-        {
-          public_id: 'cld-sample',
-          secure_url: 'https://res.cloudinary.com/dojqamm7u/image/upload/v1741988208/cld-sample.jpg',
-          format: 'jpg',
-          created_at: sampleCreationDate
-        },
-        {
-          public_id: 'cld-sample-2',
-          secure_url: 'https://res.cloudinary.com/dojqamm7u/image/upload/v1741988208/cld-sample-2.jpg',
-          format: 'jpg',
-          created_at: sampleCreationDate
-        },
-        {
-          public_id: 'cld-sample-3',
-          secure_url: 'https://res.cloudinary.com/dojqamm7u/image/upload/v1741988208/cld-sample-3.jpg',
-          format: 'jpg',
-          created_at: sampleCreationDate
-        },
-        {
-          public_id: 'cld-sample-4',
-          secure_url: 'https://res.cloudinary.com/dojqamm7u/image/upload/v1741988208/cld-sample-4.jpg',
-          format: 'jpg',
-          created_at: sampleCreationDate
-        },
-        {
-          public_id: 'cld-sample-5',
-          secure_url: 'https://res.cloudinary.com/dojqamm7u/image/upload/v1741988208/cld-sample-5.jpg',
-          format: 'jpg',
-          created_at: sampleCreationDate
-        }
+        // Add some additional sample images for testing pagination
+        { public_id: 'extra-1', secure_url: 'https://res.cloudinary.com/dojqamm7u/image/upload/v1741988207/samples/animals/cat.jpg' },
+        { public_id: 'extra-2', secure_url: 'https://res.cloudinary.com/dojqamm7u/image/upload/v1741988207/samples/animals/dog.jpg' },
+        { public_id: 'extra-3', secure_url: 'https://res.cloudinary.com/dojqamm7u/image/upload/v1741988207/samples/food/pot-mussels.jpg' },
+        { public_id: 'extra-4', secure_url: 'https://res.cloudinary.com/dojqamm7u/image/upload/v1741988207/samples/food/fish-vegetables.jpg' },
+        { public_id: 'extra-5', secure_url: 'https://res.cloudinary.com/dojqamm7u/image/upload/v1741988207/samples/food/dessert.jpg' },
+        { public_id: 'extra-6', secure_url: 'https://res.cloudinary.com/dojqamm7u/image/upload/v1741988207/samples/landscapes/beach-boat.jpg' },
+        { public_id: 'extra-7', secure_url: 'https://res.cloudinary.com/dojqamm7u/image/upload/v1741988207/samples/landscapes/nature-mountains.jpg' },
+        { public_id: 'extra-8', secure_url: 'https://res.cloudinary.com/dojqamm7u/image/upload/v1741988207/samples/people/kitchen-bar.jpg' },
+        { public_id: 'extra-9', secure_url: 'https://res.cloudinary.com/dojqamm7u/image/upload/v1741988207/samples/people/smiling-man.jpg' },
+        { public_id: 'extra-10', secure_url: 'https://res.cloudinary.com/dojqamm7u/image/upload/v1741988207/samples/people/jazz.jpg' }
       ];
       
-      // Bæta við sample myndum líka
-      sampleImages.forEach((img: CloudinaryImage) => {
+      demoImages.forEach((img) => {
         if (!allImages.has(img.secure_url)) {
-          allImages.set(img.secure_url, img);
-        }
-      });
-      
-      // Fleiri myndir til að fylla upp í
-      const additionalImages: CloudinaryImage[] = [
-        {
-          public_id: 'coffee',
-          secure_url: 'https://res.cloudinary.com/dojqamm7u/image/upload/v1741988207/samples/coffee.jpg',
-          format: 'jpg',
-          created_at: sampleCreationDate
-        },
-        {
-          public_id: 'woman-on-a-football-field',
-          secure_url: 'https://res.cloudinary.com/dojqamm7u/image/upload/v1741988207/samples/woman-on-a-football-field.jpg',
-          format: 'jpg',
-          created_at: sampleCreationDate
-        },
-        {
-          public_id: 'upscale-face-1',
-          secure_url: 'https://res.cloudinary.com/dojqamm7u/image/upload/v1741988208/samples/upscale-face-1.jpg',
-          format: 'jpg',
-          created_at: sampleCreationDate
-        },
-        {
-          public_id: 'logo',
-          secure_url: 'https://res.cloudinary.com/dojqamm7u/image/upload/v1741988208/samples/logo.jpg',
-          format: 'jpg',
-          created_at: sampleCreationDate
-        }
-      ];
-      
-      // Bæta við viðbótarmyndum ef ekki til nú þegar
-      additionalImages.forEach((img: CloudinaryImage) => {
-        if (!allImages.has(img.secure_url)) {
-          allImages.set(img.secure_url, img);
+          allImages.set(img.secure_url, {
+            ...img,
+            format: img.secure_url.split('.').pop() || 'jpg',
+            created_at: sampleCreationDate
+          });
         }
       });
       
