@@ -360,7 +360,7 @@ export const CloudinaryService = {
             public_id: url.split('/').pop().split('.')[0],
             secure_url: url,
             format: url.split('.').pop(),
-            created_at: task.created_at
+            created_at: task.created_at || new Date().toISOString()
           } as CloudinaryImage;
         });
         
@@ -370,54 +370,55 @@ export const CloudinaryService = {
       });
       
       // Sample myndir - alltaf sýna fyrir dæmi
+      const sampleCreationDate = new Date(Date.now() - 86400000).toISOString(); // 1 day ago
       const sampleImages: CloudinaryImage[] = [
         {
           public_id: 'sample1',
           secure_url: 'https://res.cloudinary.com/dojqamm7u/image/upload/v1741993767/verkefnalisti-mana/image-1741993765602-424312021_u7zbns.jpg',
           format: 'jpg',
-          created_at: new Date().toISOString()
+          created_at: sampleCreationDate
         },
         {
           public_id: 'sample2',
           secure_url: 'https://res.cloudinary.com/dojqamm7u/image/upload/v1741993836/verkefnalisti-mana/image-1741993835136-360129464_rdkyjm.jpg',
           format: 'jpg',
-          created_at: new Date().toISOString()
+          created_at: sampleCreationDate
         },
         {
           public_id: 'sample3',
           secure_url: 'https://res.cloudinary.com/dojqamm7u/image/upload/v1741993873/verkefnalisti-mana/image-1741993872277-918612344_akdzd0.png',
           format: 'png',
-          created_at: new Date().toISOString()
+          created_at: sampleCreationDate
         },
         {
           public_id: 'cld-sample',
           secure_url: 'https://res.cloudinary.com/dojqamm7u/image/upload/v1741988208/cld-sample.jpg',
           format: 'jpg',
-          created_at: new Date().toISOString()
+          created_at: sampleCreationDate
         },
         {
           public_id: 'cld-sample-2',
           secure_url: 'https://res.cloudinary.com/dojqamm7u/image/upload/v1741988208/cld-sample-2.jpg',
           format: 'jpg',
-          created_at: new Date().toISOString()
+          created_at: sampleCreationDate
         },
         {
           public_id: 'cld-sample-3',
           secure_url: 'https://res.cloudinary.com/dojqamm7u/image/upload/v1741988208/cld-sample-3.jpg',
           format: 'jpg',
-          created_at: new Date().toISOString()
+          created_at: sampleCreationDate
         },
         {
           public_id: 'cld-sample-4',
           secure_url: 'https://res.cloudinary.com/dojqamm7u/image/upload/v1741988208/cld-sample-4.jpg',
           format: 'jpg',
-          created_at: new Date().toISOString()
+          created_at: sampleCreationDate
         },
         {
           public_id: 'cld-sample-5',
           secure_url: 'https://res.cloudinary.com/dojqamm7u/image/upload/v1741988208/cld-sample-5.jpg',
           format: 'jpg',
-          created_at: new Date().toISOString()
+          created_at: sampleCreationDate
         }
       ];
       
@@ -434,25 +435,25 @@ export const CloudinaryService = {
           public_id: 'coffee',
           secure_url: 'https://res.cloudinary.com/dojqamm7u/image/upload/v1741988207/samples/coffee.jpg',
           format: 'jpg',
-          created_at: new Date().toISOString()
+          created_at: sampleCreationDate
         },
         {
           public_id: 'woman-on-a-football-field',
           secure_url: 'https://res.cloudinary.com/dojqamm7u/image/upload/v1741988207/samples/woman-on-a-football-field.jpg',
           format: 'jpg',
-          created_at: new Date().toISOString()
+          created_at: sampleCreationDate
         },
         {
           public_id: 'upscale-face-1',
           secure_url: 'https://res.cloudinary.com/dojqamm7u/image/upload/v1741988208/samples/upscale-face-1.jpg',
           format: 'jpg',
-          created_at: new Date().toISOString()
+          created_at: sampleCreationDate
         },
         {
           public_id: 'logo',
           secure_url: 'https://res.cloudinary.com/dojqamm7u/image/upload/v1741988208/samples/logo.jpg',
           format: 'jpg',
-          created_at: new Date().toISOString()
+          created_at: sampleCreationDate
         }
       ];
       

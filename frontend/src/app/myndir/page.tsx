@@ -42,7 +42,13 @@ export default function ImagesPage() {
       setLoadingImages(true);
       setImageError("");
       const response = await CloudinaryService.getImages("verkefnalisti-mana");
-      setImages(response.resources || []);
+
+      // Sort images by creation date (newest first)
+      const sortedImages = [...response.resources].sort((a, b) => {
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      });
+
+      setImages(sortedImages);
     } catch (err: any) {
       console.error("Villa við að sækja myndir:", err);
       setImageError("Villa við að sækja myndir");
@@ -135,7 +141,10 @@ export default function ImagesPage() {
         setPreviewUrl(null);
       }
 
-      fetchImages();
+      // After successful upload, refresh the image gallery immediately
+      setTimeout(() => {
+        fetchImages();
+      }, 500);
     } catch (err: any) {
       console.error("Upphleðsla mistókst:", err);
       setError(`${err.message || "Óskilgreind villa"}`);
@@ -320,39 +329,47 @@ export default function ImagesPage() {
         ) : images.length === 0 ? (
           <p className="text-center text-gray-500 py-8">Engar myndir fundust.</p>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {images.map((image) => (
-              <div key={image.public_id} className="bg-gray-100 p-3 rounded-lg">
-                <div className="relative h-40 mb-2 bg-white rounded overflow-hidden">
-                  <Image
-                    src={image.secure_url}
-                    alt=""
-                    fill
-                    sizes="(max-width: 768px) 100vw, 33vw"
-                    style={{ objectFit: "contain" }}
-                  />
+          <>
+            <div className="mb-4 text-sm text-gray-500">
+              <p>Sýni {images.length} myndir, nýjustu efst</p>
+            </div>
+            <div
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 overflow-y-auto"
+              style={{ maxHeight: "70vh" }}
+            >
+              {images.map((image) => (
+                <div key={image.public_id} className="bg-gray-100 p-3 rounded-lg">
+                  <div className="relative h-40 mb-2 bg-white rounded overflow-hidden">
+                    <Image
+                      src={image.secure_url}
+                      alt=""
+                      fill
+                      sizes="(max-width: 768px) 100vw, 33vw"
+                      style={{ objectFit: "contain" }}
+                    />
+                  </div>
+                  <div className="flex">
+                    <input
+                      type="text"
+                      value={image.secure_url}
+                      readOnly
+                      className="flex-1 text-xs bg-white px-2 py-1 border border-r-0 border-gray-300 rounded-l truncate"
+                    />
+                    <button
+                      onClick={() => copyToClipboard(image.secure_url)}
+                      className={`px-2 py-1 text-xs text-white rounded-r ${
+                        copiedUrl === image.secure_url
+                          ? "bg-green-500"
+                          : "bg-blue-500 hover:bg-blue-600"
+                      }`}
+                    >
+                      {copiedUrl === image.secure_url ? "Afritað!" : "Afrita"}
+                    </button>
+                  </div>
                 </div>
-                <div className="flex">
-                  <input
-                    type="text"
-                    value={image.secure_url}
-                    readOnly
-                    className="flex-1 text-xs bg-white px-2 py-1 border border-r-0 border-gray-300 rounded-l truncate"
-                  />
-                  <button
-                    onClick={() => copyToClipboard(image.secure_url)}
-                    className={`px-2 py-1 text-xs text-white rounded-r ${
-                      copiedUrl === image.secure_url
-                        ? "bg-green-500"
-                        : "bg-blue-500 hover:bg-blue-600"
-                    }`}
-                  >
-                    {copiedUrl === image.secure_url ? "Afritað!" : "Afrita"}
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          </>
         )}
       </div>
     </div>

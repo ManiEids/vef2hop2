@@ -67,8 +67,14 @@ export default function MediaLibraryModal({
         uniqueImages.set(img.secure_url, img);
       });
       
-      setImages(Array.from(uniqueImages.values()));
-      console.log(`Sækja myndir: ${Array.from(uniqueImages.values()).length} einstakar myndir fundust`);
+      // Convert to array and sort by created_at date (newest first)
+      const sortedImages = Array.from(uniqueImages.values())
+        .sort((a, b) => {
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        });
+      
+      setImages(sortedImages);
+      console.log(`Sækja myndir: ${sortedImages.length} einstakar myndir fundust`);
     } catch (err: any) {
       setError("Villa við að sækja myndir");
       console.error(err);
@@ -212,34 +218,40 @@ export default function MediaLibraryModal({
                   </button>
                 </div>
               ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                  {images.map((image) => (
-                    <div 
-                      key={image.public_id} 
-                      className={`relative aspect-square rounded-md overflow-hidden cursor-pointer border-2 ${
-                        selectedImage === image.secure_url 
-                          ? "border-blue-500" 
-                          : "border-transparent hover:border-gray-300"
-                      }`}
-                      onClick={() => handleImageSelect(image.secure_url)}
-                    >
-                      <Image
-                        src={image.secure_url}
-                        alt=""
-                        fill
-                        sizes="(max-width: 768px) 33vw, 25vw"
-                        style={{ objectFit: "cover" }}
-                      />
-                      {selectedImage === image.secure_url && (
-                        <div className="absolute top-2 right-2 bg-blue-500 rounded-full w-6 h-6 flex items-center justify-center">
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                          </svg>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
+                <>
+                  <div className="mb-4 text-sm text-gray-500">
+                    <p>Sýni {images.length} myndir, nýjustu efst</p>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 overflow-y-auto" 
+                       style={{ maxHeight: 'calc(70vh - 160px)' }}>
+                    {images.map((image) => (
+                      <div 
+                        key={image.public_id} 
+                        className={`relative aspect-square rounded-md overflow-hidden cursor-pointer border-2 ${
+                          selectedImage === image.secure_url 
+                            ? "border-blue-500" 
+                            : "border-transparent hover:border-gray-300"
+                        }`}
+                        onClick={() => handleImageSelect(image.secure_url)}
+                      >
+                        <Image
+                          src={image.secure_url}
+                          alt=""
+                          fill
+                          sizes="(max-width: 768px) 33vw, 25vw"
+                          style={{ objectFit: "cover" }}
+                        />
+                        {selectedImage === image.secure_url && (
+                          <div className="absolute top-2 right-2 bg-blue-500 rounded-full w-6 h-6 flex items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </>
               )}
             </>
           )}
