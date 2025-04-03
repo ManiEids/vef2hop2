@@ -24,7 +24,13 @@ main {
   left: 0;
   width: 100%;
   height: 100%;
-  z-index: 0;
+  z-index: -1; /* Changed from 0 to -1 so it doesn't block interactions */
+  pointer-events: none; /* Ensure clicks pass through to elements below */
+}
+
+header, footer {
+  position: relative;
+  z-index: 10; /* Ensure header and footer are above other elements */
 }
 
 .star {

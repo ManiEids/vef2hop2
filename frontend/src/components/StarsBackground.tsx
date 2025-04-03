@@ -40,7 +40,7 @@ export default function StarsBackground() {
   }, []);
 
   return (
-    <div className="stars">
+    <div className="stars" style={{ pointerEvents: 'none' }}>
       {stars.map((star, index) => (
         <div
           key={index}
@@ -48,7 +48,8 @@ export default function StarsBackground() {
           style={{
             left: star.left,
             top: star.top,
-            animationDelay: star.delay
+            animationDelay: star.delay,
+            pointerEvents: 'none' // Ensure each star also doesn't capture clicks
           }}
         ></div>
       ))}

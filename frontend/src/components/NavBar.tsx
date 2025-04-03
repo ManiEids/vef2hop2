@@ -14,31 +14,31 @@ export default function NavBar() {
   };
 
   return (
-    <header className="bg-gray-900 shadow-md">
+    <header className="bg-gray-900 shadow-md z-50">
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
-          <Link href="/" className="text-2xl font-bold text-blue-400">
+          <Link href="/" className="text-2xl font-bold text-blue-400 relative z-10">
             Verkefnalisti
           </Link>
 
-          <nav className="flex items-center gap-6">
-            <Link href="/" className={`hover:text-blue-400 ${isActive("/")}`}>
+          <nav className="flex items-center gap-6 relative z-10">
+            <Link href="/" className={`hover:text-blue-400 ${isActive("/")} relative z-10`}>
               Forsíða
             </Link>
-            <Link href="/verkefni" className={`hover:text-blue-400 ${isActive("/verkefni")}`}>
+            <Link href="/verkefni" className={`hover:text-blue-400 ${isActive("/verkefni")} relative z-10`}>
               Verkefni
             </Link>
-            <Link href="/flokkar" className={`hover:text-blue-400 ${isActive("/flokkar")}`}>
+            <Link href="/flokkar" className={`hover:text-blue-400 ${isActive("/flokkar")} relative z-10`}>
               Flokkar
             </Link>
             
             {user ? (
               <>
-                <Link href="/myndir" className={`hover:text-blue-400 ${isActive("/myndir")}`}>
+                <Link href="/myndir" className={`hover:text-blue-400 ${isActive("/myndir")} relative z-10`}>
                   Myndir
                 </Link>
                 {user.isAdmin && (
-                  <Link href="/admin" className={`hover:text-blue-400 ${isActive("/admin")}`}>
+                  <Link href="/admin" className={`hover:text-blue-400 ${isActive("/admin")} relative z-10`}>
                     Stjórnborð
                   </Link>
                 )}
@@ -46,7 +46,7 @@ export default function NavBar() {
                   <span className="text-sm">{user.name}</span>
                   <button 
                     onClick={logout}
-                    className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm"
+                    className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm relative z-10"
                   >
                     Útskrá
                   </button>
@@ -55,7 +55,7 @@ export default function NavBar() {
             ) : (
               <Link 
                 href="/innskraning"
-                className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
+                className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded relative z-10"
               >
                 Innskráning
               </Link>

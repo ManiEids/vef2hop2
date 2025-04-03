@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import Image from "next/image";
+import Link from "next/link";
 
 export default function ImagesPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -11,8 +12,17 @@ export default function ImagesPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null);
+  const [uploadPreset, setUploadPreset] = useState("verkefnalisti");
   
   const { user } = useAuth();
+
+  useEffect(() => {
+    // Check if upload preset is saved in local storage
+    const savedPreset = localStorage.getItem("cloudinary_upload_preset");
+    if (savedPreset) {
+      setUploadPreset(savedPreset);
+    }
+  }, []);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -35,6 +45,12 @@ export default function ImagesPage() {
     setError("");
   };
 
+  const saveUploadPreset = () => {
+    localStorage.setItem("cloudinary_upload_preset", uploadPreset);
+    setSuccess("Cloudinary upload preset vistaður!");
+    setTimeout(() => setSuccess(""), 3000);
+  };
+
   const handleUpload = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -51,7 +67,7 @@ export default function ImagesPage() {
     
     const formData = new FormData();
     formData.append("file", selectedFile);
-    formData.append("upload_preset", "verkefnalisti"); // Þú þarft að búa til upload preset á Cloudinary
+    formData.append("upload_preset", uploadPreset);
     formData.append("folder", "verkefnalisti-mana");
     
     setUploading(true);
@@ -59,9 +75,8 @@ export default function ImagesPage() {
     setSuccess("");
     
     try {
-      // Nota beint Cloudinary - fjarlægja flækju með bakendatilraunum
       const cloudinaryUrl = `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`;
-      console.log(`Hleð beint upp á Cloudinary: ${cloudinaryUrl}`);
+      console.log(`Hleð beint upp á Cloudinary: ${cloudinaryUrl} með preset: ${uploadPreset}`);
       
       const response = await fetch(cloudinaryUrl, {
         method: "POST",
@@ -71,6 +86,12 @@ export default function ImagesPage() {
       if (!response.ok) {
         const errorText = await response.text();
         console.error("Cloudinary API villa:", errorText);
+        
+        // Handle common errors more specifically
+        if (errorText.includes("Upload preset not found")) {
+          throw new Error(`Upload preset '${uploadPreset}' fannst ekki. Búðu til upload preset í Cloudinary stjórnborðinu.`);
+        }
+        
         throw new Error(`Villa við upphleðslu: ${response.status} - ${errorText}`);
       }
       
@@ -86,7 +107,7 @@ export default function ImagesPage() {
       }
     } catch (err: any) {
       console.error("Upphleðsla mistókst:", err);
-      setError(`Villa kom upp við að hlaða upp mynd: ${err.message || 'Óskilgreind villa'}`);
+      setError(`${err.message || 'Óskilgreind villa'}`);
     } finally {
       setUploading(false);
     }
@@ -105,6 +126,32 @@ export default function ImagesPage() {
       <h1 className="text-3xl font-bold mb-6">Myndir</h1>
       
       <div className="bg-white p-6 rounded-lg shadow-md mb-6">
+        <h2 className="text-xl font-semibold mb-4">Cloudinary Stillingar</h2>
+        
+        <div className="mb-6">
+          <label className="block text-gray-700 font-medium mb-2">
+            Upload Preset
+          </label>
+          <div className="flex">
+            <input
+              type="text"
+              value={uploadPreset}
+              onChange={(e) => setUploadPreset(e.target.value)}
+              className="flex-1 px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Settu inn upload preset"
+            />
+            <button
+              onClick={saveUploadPreset}
+              className="bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded-r-md"
+            >
+              Vista
+            </button>
+          </div>
+          <p className="mt-2 text-sm text-gray-500">
+            Þú þarft að stofna <a href="https://cloudinary.com/documentation/upload_presets" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">upload preset</a> í Cloudinary stjórnborðinu og stilla það á <strong>Unsigned</strong>.
+          </p>
+        </div>
+        
         <h2 className="text-xl font-semibold mb-4">Hlaða upp mynd</h2>
         
         {error && (
@@ -122,7 +169,7 @@ export default function ImagesPage() {
         <form onSubmit={handleUpload}>
           <div className="mb-4">
             <label className="block text-gray-700 font-medium mb-2">
-              Lorem ipsum
+              Mynd
             </label>
             <input
               type="file"
@@ -131,7 +178,7 @@ export default function ImagesPage() {
               className="w-full text-gray-700 border border-gray-300 rounded py-2 px-3"
             />
             <p className="mt-1 text-sm text-gray-500">
-              Lorem ipsum dolor sit amet
+              Hámarksstærð: 5MB. JPG og PNG myndir.
             </p>
           </div>
           
@@ -173,7 +220,7 @@ export default function ImagesPage() {
             />
           </div>
           <div className="bg-gray-100 p-3 rounded-md">
-            <p className="text-sm font-medium mb-1">Lorem ipsum:</p>
+            <p className="text-sm font-medium mb-1">Slóð á mynd:</p>
             <div className="flex">
               <input 
                 type="text"
