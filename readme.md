@@ -6,7 +6,7 @@ Verkefnalisti er vefforrit sem gerir notendum kleift að halda utan um verkefni 
 
 ## Takmarkanir og áskoranir
 
-Þetta verkefni byggir á fyrri skilum (hópverkefni 1) sem bakenda. Við lentum í nokkrum áskorunum:
+Þetta verkefni byggir á fyrri skilum (hópverkefni 1) sem bakenda. Ég lenti í nokkrum áskorunum:
 
 - Bakendinn var ekki fullkominn og sum API köll virkuðu ekki eins og búist var við
 - Mynda virkni var ekki hluti af upprunalega bakendanum og þurfti að bæta því við
@@ -14,9 +14,9 @@ Verkefnalisti er vefforrit sem gerir notendum kleift að halda utan um verkefni 
 - Ýmis smáatriði og villur í upprunalega bakendanum þurftu sérstaka meðhöndlun
 
 Til að leysa þessar áskoranir:
-- Höfum við innleitt "fallback" á mock bakenda þegar raunverulegi bakendinn virkar ekki
-- Settum upp beina tengingu við Cloudinary API fyrir mynda virkni
-- Bættum við villutilkynningum og loading state á viðmótið
+- Ég innleiddi "fallback" á mock bakenda þegar raunverulegi bakendinn virkar ekki
+- Setti upp beina tengingu við Cloudinary API fyrir mynda virkni
+- Bætti við villutilkynningum og loading state á viðmótið
 
 ## Virkni
 
@@ -70,7 +70,7 @@ npm run dev
 
 Verkefnið var unnið í þrepum:
 
-1. Fyrst var sett upp grunnstrúktúr með Next.js og TypeScript
+1. Fyrst var settur upp grunnstrúktúr með Next.js og TypeScript
 2. Síðan var útfærð notendavirkni með innskráningu og nýskráningu
 3. Verkefnalisti og verkefnasíður voru útfærðar með tengingum við bakenda
 4. Þegar kom í ljós að sumar aðgerðir virkuðu ekki í bakendanum var bætt við mock virkni
@@ -93,4 +93,4 @@ Lærdómurinn var mikill, sérstaklega varðandi:
 - Forritunarmynstur fyrir React og Next.js
 
 ## Höfundur
-Verkefnið var unnið af Máni hópaverkefni 2 í Vefforritun 2 við Háskóla Íslands vorið 2025.
+Verkefnið var unnið af Mána sem hópaverkefni 2 í Vefforritun 2 við Háskóla Íslands vorið 2025.
