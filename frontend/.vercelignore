@@ -1,0 +1,6 @@
+.git
+.github
+node_modules
+.eslintrc.js
+babel.config.js
+README.md

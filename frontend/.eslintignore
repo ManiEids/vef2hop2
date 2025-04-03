@@ -1,6 +1,15 @@
-# Configuration files that cause issues
+# Configuration files
 *.config.js
+next.config.mjs
 postcss.config.js
 tailwind.config.js
-next.config.mjs
 babel.config.js
+
+# Build output
+.next/
+out/
+build/
+dist/
+
+# Node modules
+node_modules/

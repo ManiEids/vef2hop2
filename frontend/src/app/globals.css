@@ -1,4 +1,7 @@
-/* These are Tailwind CSS directives that will be processed by PostCSS */
+/* 
+ * These are Tailwind CSS directives that will be processed by PostCSS.
+ * CSS validation warnings about @tailwind and @apply can be safely ignored.
+ */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
