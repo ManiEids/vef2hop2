@@ -12,12 +12,13 @@ export default function ImagesPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null);
+  // Use your created preset name as the default
   const [uploadPreset, setUploadPreset] = useState(() => {
     // Try to get from localStorage first, otherwise use default
     if (typeof window !== 'undefined') {
-      return localStorage.getItem("cloudinary_upload_preset") || "ml_default";
+      return localStorage.getItem("cloudinary_upload_preset") || "verkefnalisti-uploads";
     }
-    return "ml_default";
+    return "verkefnalisti-uploads";
   });
   
   const { user } = useAuth();
@@ -153,9 +154,23 @@ export default function ImagesPage() {
               Vista
             </button>
           </div>
-          <p className="mt-2 text-sm text-gray-500">
-            Þú þarft að stofna <a href="https://cloudinary.com/documentation/upload_presets" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">upload preset</a> í Cloudinary stjórnborðinu og stilla það á <strong>Unsigned</strong>.
-          </p>
+          <div className="mt-2 text-sm">
+            <p className="text-gray-500 mb-2">
+              <strong>MIKILVÆGT:</strong> Þú þarft að stofna <a href="https://cloudinary.com/console/settings/upload" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">upload preset</a> í Cloudinary stjórnborðinu og stilla það á <strong>Unsigned</strong>.
+            </p>
+            <div className="bg-blue-50 p-3 border-l-4 border-blue-400">
+              <p className="mb-1"><strong>Leiðbeiningar:</strong></p>
+              <ol className="list-decimal pl-5">
+                <li>Opnaðu <a href="https://cloudinary.com/console/settings/upload" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline">Cloudinary Upload Settings</a></li>
+                <li>Skrollaðu niður að "Upload Presets"</li>
+                <li>Smelltu á "Add upload preset"</li>
+                <li>Settu nafn presets (t.d. "verkefnalisti-uploads")</li>
+                <li>Stilltu "Signing Mode" á <strong>Unsigned</strong></li> 
+                <li>Vistaðu presetið með því að smella á "Save"</li>
+                <li>Notaðu sama nafn hér að ofan</li>
+              </ol>
+            </div>
+          </div>
         </div>
         
         <h2 className="text-xl font-semibold mb-4">Hlaða upp mynd</h2>

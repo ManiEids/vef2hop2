@@ -270,3 +270,39 @@ export const TagService = {
     return fetchApi("/tags");
   }
 };
+
+// Provide a fallback mechanism for image uploads
+export const CloudinaryService = {
+  uploadImage: async (file: File, preset?: string) => {
+    // Fallback preset - MUST be created in Cloudinary dashboard with "Unsigned" mode
+    const uploadPreset = preset || localStorage.getItem("cloudinary_upload_preset") || "verkefnalisti-uploads";
+    
+    const cloudName = "dojqamm7u";
+    
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", uploadPreset);
+    formData.append("folder", "verkefnalisti-mana");
+    
+    try {
+      const cloudinaryUrl = `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`;
+      
+      const response = await fetch(cloudinaryUrl, {
+        method: "POST",
+        body: formData,
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Cloudinary API error:", errorText);
+        throw new Error(`Upload failed: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      return data.secure_url;
+    } catch (error) {
+      console.error("Image upload failed:", error);
+      throw error;
+    }
+  }
+};

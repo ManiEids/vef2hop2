@@ -13,7 +13,10 @@ export default function ImageUploader({ initialImageUrl = "", onImageSelected }:
   const [previewUrl, setPreviewUrl] = useState<string | null>(initialImageUrl || null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
-  
+
+  // Update this to match your new Cloudinary preset
+  const DEFAULT_PRESET = "verkefnalisti-uploads";
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -25,11 +28,11 @@ export default function ImageUploader({ initialImageUrl = "", onImageSelected }:
     }
 
     // Check if file is an image
-    if (!file.type.match('image/(jpeg|jpg|png)')) {
+    if (!file.type.match("image/(jpeg|jpg|png)")) {
       setError("Aðeins eru leyfðar JPG og PNG myndir");
       return;
     }
-    
+
     setSelectedFile(file);
     setPreviewUrl(URL.createObjectURL(file));
     setError("");
@@ -40,43 +43,54 @@ export default function ImageUploader({ initialImageUrl = "", onImageSelected }:
       setError("Vinsamlegast veldu mynd");
       return;
     }
-    
-    // Hardcode the cloud name to ensure it always works on Vercel
-    const cloudName = "dojqamm7u"; 
-    
-    // Always use ml_default as fallback preset
-    const uploadPreset = localStorage.getItem("cloudinary_upload_preset") || "ml_default";
-    
+
+    // Hardcoded cloud name - matches your account
+    const cloudName = "dojqamm7u";
+
+    // Use the preset you created in Cloudinary dashboard
+    const uploadPreset = localStorage.getItem("cloudinary_upload_preset") || DEFAULT_PRESET;
+
     const formData = new FormData();
     formData.append("file", selectedFile);
     formData.append("upload_preset", uploadPreset);
     formData.append("folder", "verkefnalisti-mana");
-    
+
     setUploading(true);
     setError("");
-    
+
     try {
       const cloudinaryUrl = `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`;
-      
+      console.log(`Hleð upp mynd á Cloudinary með preset: ${uploadPreset}`);
+
       const response = await fetch(cloudinaryUrl, {
         method: "POST",
         body: formData,
       });
-      
+
       if (!response.ok) {
         const errorText = await response.text();
         console.error("Cloudinary API villa:", errorText);
-        
-        if (errorText.includes("Upload preset not found")) {
-          throw new Error(`Upload preset '${uploadPreset}' fannst ekki. Reyndu að nota "ml_default" eða búðu til preset í Cloudinary stjórnborðinu`);
+
+        let errorMessage = `Villa við upphleðslu: ${response.status}`;
+
+        try {
+          const errorData = JSON.parse(errorText);
+          if (errorData?.error?.message === "Upload preset not found") {
+            errorMessage = `Upload preset '${uploadPreset}' fannst ekki. Vinsamlegast búðu til nýtt preset í Cloudinary stjórnborðinu og stilltu það á Unsigned.`;
+          } else if (errorData?.error?.message) {
+            errorMessage = `Cloudinary villa: ${errorData.error.message}`;
+          }
+        } catch (e) {
+          // If error text is not JSON, use it directly
+          errorMessage = `Villa: ${errorText}`;
         }
-        
-        throw new Error(`Villa við upphleðslu: ${response.status}`);
+
+        throw new Error(errorMessage);
       }
-      
+
       const data = await response.json();
+      console.log("Mynd hlaðið upp:", data.secure_url);
       onImageSelected(data.secure_url);
-      
     } catch (err: any) {
       console.error("Upphleðsla mistókst:", err);
       setError(err.message || "Óskilgreind villa við upphleðslu");
@@ -92,7 +106,7 @@ export default function ImageUploader({ initialImageUrl = "", onImageSelected }:
           {error}
         </div>
       )}
-      
+
       <div className="flex items-center gap-4">
         <input
           type="file"
@@ -109,12 +123,12 @@ export default function ImageUploader({ initialImageUrl = "", onImageSelected }:
           {uploading ? "Hleður..." : "Hlaða upp"}
         </button>
       </div>
-      
+
       {previewUrl && (
         <div>
           <div className="relative h-32 bg-gray-100 rounded-md overflow-hidden">
-            <Image 
-              src={previewUrl} 
+            <Image
+              src={previewUrl}
               fill
               sizes="(max-width: 768px) 100vw, 300px"
               alt="Forskoðun"
