@@ -7,6 +7,8 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  // Ensure SWC is used (default for Next.js 12+)
+  swcMinify: true,
 };
 
 export default nextConfig;
