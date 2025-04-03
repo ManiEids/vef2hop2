@@ -21,11 +21,11 @@ Verkefnalisti er vefforrit sem gerir notendum kleift að halda utan um verkefni 
 
 ## Tæknilegar upplýsingar
 
-### Tæknistack
+### Hvað er notað
 - **HTML5**: Uppbygging síðu
 - **Sass/CSS**: Útlit og stílun
 - **JavaScript (ES modules)**: Virkni forrits
-- **Netlify**: Hýsing og dreifing
+- **Vercel**
 
 ### Uppsetning verkefnis fyrir þróun
 

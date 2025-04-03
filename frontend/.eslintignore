@@ -1,0 +1,6 @@
+# Configuration files that cause issues
+*.config.js
+postcss.config.js
+tailwind.config.js
+next.config.mjs
+babel.config.js

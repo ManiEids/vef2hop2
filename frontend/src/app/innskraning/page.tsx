@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
 
-export default function Login() {
+// fyrir search parametra
+function LoginContent() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -112,5 +113,24 @@ export default function Login() {
         </p>
       </div>
     </div>
+  );
+}
+
+// Main component with Suspense
+export default function Login() {
+  return (
+    <Suspense fallback={
+      <div className="max-w-md mx-auto mt-10 p-6 bg-white rounded-lg shadow-md">
+        <div className="animate-pulse">
+          <div className="h-8 bg-gray-300 rounded w-1/2 mx-auto mb-6"></div>
+          <div className="h-24 bg-gray-300 rounded mb-4"></div>
+          <div className="h-10 bg-gray-300 rounded mb-4"></div>
+          <div className="h-10 bg-gray-300 rounded mb-6"></div>
+          <div className="h-12 bg-gray-300 rounded"></div>
+        </div>
+      </div>
+    }>
+      <LoginContent />
+    </Suspense>
   );
 }
