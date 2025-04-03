@@ -222,8 +222,7 @@ export default function MediaLibraryModal({
                   <div className="mb-4 text-sm text-gray-500">
                     <p>Sýni {images.length} myndir, nýjustu efst</p>
                   </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 overflow-y-auto" 
-                       style={{ maxHeight: 'calc(70vh - 160px)' }}>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                     {images.map((image) => (
                       <div 
                         key={image.public_id} 
