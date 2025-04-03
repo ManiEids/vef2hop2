@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { TaskService, CategoryService } from "@/services/api";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
@@ -21,7 +21,8 @@ interface Category {
   name: string;
 }
 
-export default function TasksPage() {
+// This component uses searchParams, so it needs to be wrapped in Suspense
+function TasksContent() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
@@ -218,5 +219,27 @@ export default function TasksPage() {
         </>
       )}
     </div>
+  );
+}
+
+// Main Tasks Page component with Suspense
+export default function TasksPage() {
+  return (
+    <Suspense fallback={
+      <div className="animate-pulse space-y-4">
+        <div className="h-8 bg-gray-300 rounded w-3/4"></div>
+        <div className="h-4 bg-gray-300 rounded w-1/2 mb-6"></div>
+        <div className="flex gap-2 mb-6">
+          <div className="h-8 bg-gray-300 rounded-full w-16"></div>
+          <div className="h-8 bg-gray-300 rounded-full w-20"></div>
+          <div className="h-8 bg-gray-300 rounded-full w-24"></div>
+        </div>
+        <div className="h-20 bg-gray-300 rounded w-full mb-4"></div>
+        <div className="h-20 bg-gray-300 rounded w-full mb-4"></div>
+        <div className="h-20 bg-gray-300 rounded w-full mb-4"></div>
+      </div>
+    }>
+      <TasksContent />
+    </Suspense>
   );
 }
