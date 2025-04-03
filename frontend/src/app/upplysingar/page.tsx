@@ -18,8 +18,9 @@ export default function AboutPage() {
         
         <div className="p-6">
           <p className="text-gray-700 mb-4">
-            Verkefnalisti er smíðaður af Mána sem hluti af námskeiðinu Vefforritun 2 við Háskóla Íslands. 
-            Verkefnið er unnið í Next.js og TypeScript með stuðningi við bakenda fyrir gögn eða möckuð gögn í staðinn.
+            "Verkefnalisti" er smíðaður af Mána sem hluti af námskeiðinu Vefforritun 2 við Háskóla Íslands. 
+            Verkefnið er unnið í Next.js og TypeScript með stuðningi við bakenda fyrir gögn eða notar möckuð gögn í staðinn . 
+            Bakendinn er gamla verkefnið í skilum 1 - ég breytti engu í því , ef mig vantaði eitthvað , mockaði ég það í staðinn.
           </p>
           
           <p className="text-gray-700 mb-4">
@@ -33,8 +34,9 @@ export default function AboutPage() {
               <li>Flokkun verkefna</li>
               <li>Myndir tengdar við verkefni</li>
               <li>Notendaumsjón með mismunandi aðgangsheimildum</li>
-              <li>Mökkuð gögn ef bakendi er ekki tiltækur</li>
-              <li>Fallegt notendaviðmót með dökkum ham</li>
+              <li>Mock gögn ef bakendi er ekki tiltækur</li>
+              <li>Sama space thema og ég hef verið að nota</li>
+              <li>ATH - Verkefnið notar fyrri skil - h1 - á render sem bakenda - þegar það er hægt , annars setti ég upp mock til að halda virkni</li>
             </ul>
           </div>
         </div>
@@ -47,7 +49,7 @@ export default function AboutPage() {
             <span className="text-2xl font-bold text-gray-600">ME</span>
           </div>
           <div>
-            <p className="font-medium">Máni Einarsson</p>
+            <p className="font-medium">Máni </p>
             <p className="text-gray-600">Hópaverkefni 2 - Vefforritun 2</p>
             <p className="text-gray-600">Háskóli Íslands</p>
           </div>

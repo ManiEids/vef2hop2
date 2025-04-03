@@ -1,13 +1,27 @@
-# Verkefnalisti - Hópaverkefni 2, Vefforritun 2025
+# Verkefnalisti - Hópaverkefni 2, Vefforritun 2
 
 ## Um verkefnið
 
 Verkefnalisti er vefforrit sem gerir notendum kleift að halda utan um verkefni sín á skipulagðan og skilvirkan hátt. Forritið býður upp á möguleika á að búa til, breyta, eyða og merkja verkefni sem lokið, auk þess að flokka þau eftir flokkum og merkjum (tags).
 
+## Takmarkanir og áskoranir
+
+Þetta verkefni byggir á fyrri skilum (hópverkefni 1) sem bakenda. Við lentum í nokkrum áskorunum:
+
+- Bakendinn var ekki fullkominn og sum API köll virkuðu ekki eins og búist var við
+- Mynda virkni var ekki hluti af upprunalega bakendanum og þurfti að bæta því við
+- Cloudinary upphleðsla krafðist sérsniðins kóða til að virka með Next.js
+- Ýmis smáatriði og villur í upprunalega bakendanum þurftu sérstaka meðhöndlun
+
+Til að leysa þessar áskoranir:
+- Höfum við innleitt "fallback" á mock bakenda þegar raunverulegi bakendinn virkar ekki
+- Settum upp beina tengingu við Cloudinary API fyrir mynda virkni
+- Bættum við villutilkynningum og loading state á viðmótið
+
 ## Virkni
 
 ### Aðalvirkni
-- **Skoða verkefni**: Sjá öll verkefni á einum stað
+- **Skoða verkefni**: Sjá öll verkefni á einum stað með síðuskiptingu
 - **Bæta við verkefnum**: Búa til ný verkefni með titli, lýsingu, lokadegi og fleiri upplýsingum
 - **Breyta verkefnum**: Uppfæra upplýsingar um verkefni
 - **Eyða verkefnum**: Fjarlægja verkefni sem ekki eru lengur viðeigandi
@@ -17,42 +31,66 @@ Verkefnalisti er vefforrit sem gerir notendum kleift að halda utan um verkefni 
 - **Flokkar**: Skipuleggja verkefni eftir flokkum
 - **Tags**: Bæta við merkjum við verkefni til að auðvelda leit
 - **Síun**: Sía verkefni eftir stöðu, flokkum og merkjum
-- **Röðun**: Raða verkefnum eftir titli, lokadegi eða forgangi
 
-## Tæknilegar upplýsingar
+### Notendavirkni
+- **Innskráning**: Notendur geta skráð sig inn
+- **Nýskráning**: Notendur geta búið til aðgang
+- **Stjórnendaaðgangur**: Sér virkni fyrir stjórnendur
 
-### Hvað er notað
-- **HTML5**: Uppbygging síðu
-- **Sass/CSS**: Útlit og stílun
-- **JavaScript (ES modules)**: Virkni forrits
-- **Vercel**
+## Tæknistakur
 
-### Uppsetning verkefnis fyrir þróun
+Verkefnið er byggt upp með:
+- **Next.js**: App Router (server-side rendering)
+- **TypeScript**: Fyrir týpuvörn og þróun
+- **Tailwind CSS**: Fyrir útlit og responsive hönnun
+- **Cloudinary**: Fyrir mynda virkni og geymslu
+- **Mock API**: Fyrir prófun án bakenda
 
+## Uppsetning verkefnis
 
+### Nauðsynlegar forsendur
+- Node.js (útgáfa 18 eða nýrri)
+- npm (fylgir með Node.js)
 
- Setja upp nauðsynleg tól:
+### Uppsetning
 ```bash
 npm install
 ```
 
- Keyra verkefnið í þróunarumhverfi:
+### Keyra verkefnið
 ```bash
 npm run dev
 ```
 
- Samhliða þróun, keyra Sass compiler til að uppfæra CSS skrár:
-```bash
-npm run sass
-```
+### Innskráningarupplýsingar 
+- **Stjórnandi**: notandanafn: `admin`, lykilorð: `admin`
+- **Almennur notandi**: notandanafn: `user`, lykilorð: `user`
 
-### NPM Skipanir
-- `npm run dev` - Keyrir verkefnið á local server
-- `npm run lint` - Athugar kóða með ESLint og Stylelint
-- `npm run fix` - Lagar sjálfvirkt algengar villur í kóða
-- `npm run sass` - Fylgist með breytingum á Sass skrám og uppfærir CSS
-- `npm run build` - Býr til þjappaða útgáfu af CSS fyrir framleiðslu
+## Vinna að verkefninu
 
-## Höfundar
-Hópaverkefni 1 í Vefforritun 2025
-Höfundur: Máni Eiðs
+Verkefnið var unnið í þrepum:
+
+1. Fyrst var sett upp grunnstrúktúr með Next.js og TypeScript
+2. Síðan var útfærð notendavirkni með innskráningu og nýskráningu
+3. Verkefnalisti og verkefnasíður voru útfærðar með tengingum við bakenda
+4. Þegar kom í ljós að sumar aðgerðir virkuðu ekki í bakendanum var bætt við mock virkni
+5. Cloudinary var tengt við verkefnið fyrir mynda virkni
+6. Að lokum var unnið í útliti og notendaupplifun
+
+## Vandamál og lærdómur
+
+Nokkur atriði sem ég lenti í vandræðum með:
+
+- **Cross-Origin Resource Sharing (CORS)**: Vandamál með að tala við bakendann
+- **API samræmi**: Svör frá bakenda voru ekki alltaf á sama formi
+- **Next.js server components vs client components**: Læra þurfti hvenær á að nota hvort
+- **Cloudinary undirritun**: Vinna með undirritaða og óundirritaða upphleðslu
+- **Loading states**: Hanna notendaviðmót sem sýnir rétt loading ástand
+
+Lærdómurinn var mikill, sérstaklega varðandi:
+- Hvernig á að hanna góða notendaupplifun þrátt fyrir takmarkaðan bakenda
+- Hvernig á að smíða robust frontend sem getur unnið með ófullkomnum bakenda
+- Forritunarmynstur fyrir React og Next.js
+
+## Höfundur
+Verkefnið var unnið af Máni hópaverkefni 2 í Vefforritun 2 við Háskóla Íslands vorið 2025.
