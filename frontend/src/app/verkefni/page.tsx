@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { TaskService } from "@/services/api";
+import { TaskService, CategoryService } from "@/services/api";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
+import { useSearchParams } from "next/navigation";
 
 interface Task {
   id: string;
@@ -15,31 +16,50 @@ interface Task {
   category_name?: string;
 }
 
+interface Category {
+  id: string;
+  name: string;
+}
+
 export default function TasksPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const { user } = useAuth();
+  const searchParams = useSearchParams();
+  const categoryFilter = searchParams.get("category");
 
   useEffect(() => {
-    const fetchTasks = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
-        const response = await TaskService.getAll(page);
+
+        // Get categories first
+        const categoriesData = await CategoryService.getAll();
+        setCategories(categoriesData || []);
+
+        // Then get tasks, filtered by category if specified
+        const response = await TaskService.getAll(
+          page,
+          10,
+          categoryFilter || undefined
+        );
+
         setTasks(response.items || []);
         setTotalPages(Math.ceil((response.count || 0) / 10));
       } catch (err) {
-        setError("Villa kom upp við að sækja verkefni");
+        setError("Villa kom upp við að sækja gögn");
         console.error(err);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchTasks();
-  }, [page]);
+    fetchData();
+  }, [page, categoryFilter]);
 
   const handlePageChange = (newPage: number) => {
     if (newPage > 0 && newPage <= totalPages) {
@@ -53,18 +73,52 @@ export default function TasksPage() {
     return date.toLocaleDateString("is-IS");
   };
 
+  const getCategoryName = (categoryId?: string) => {
+    if (!categoryId) return "";
+    const category = categories.find((c) => c.id === categoryId);
+    return category ? category.name : "";
+  };
+
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Verkefnalisti</h1>
-        {user && (
+        <div className="flex gap-4">
+          {user && (
+            <Link
+              href="/verkefni/nyr"
+              className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md"
+            >
+              Nýtt verkefni
+            </Link>
+          )}
+        </div>
+      </div>
+
+      {/* Category filter */}
+      <div className="mb-6 flex flex-wrap gap-2">
+        <Link
+          href="/verkefni"
+          className={`px-3 py-1 rounded-full ${
+            !categoryFilter ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-800"
+          }`}
+        >
+          Allt
+        </Link>
+
+        {categories.map((category) => (
           <Link
-            href="/verkefni/nyr"
-            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md"
+            key={category.id}
+            href={`/verkefni?category=${category.id}`}
+            className={`px-3 py-1 rounded-full ${
+              categoryFilter === category.id
+                ? "bg-blue-500 text-white"
+                : "bg-gray-200 text-gray-800"
+            }`}
           >
-            Nýtt verkefni
+            {category.name}
           </Link>
-        )}
+        ))}
       </div>
 
       {loading ? (
@@ -79,7 +133,11 @@ export default function TasksPage() {
         </div>
       ) : tasks.length === 0 ? (
         <div className="text-center py-10">
-          <p className="text-gray-500 text-lg">Engin verkefni fundust</p>
+          <p className="text-gray-500 text-lg">
+            {categoryFilter
+              ? "Engin verkefni fundust í þessum flokki"
+              : "Engin verkefni fundust"}
+          </p>
           {user && (
             <Link
               href="/verkefni/nyr"
@@ -94,12 +152,22 @@ export default function TasksPage() {
           <div className="bg-white shadow overflow-hidden rounded-md">
             <ul className="divide-y divide-gray-200">
               {tasks.map((task) => (
-                <li key={task.id}>
+                <li
+                  key={task.id}
+                  className="task-item"
+                  style={{ "--animation-order": tasks.indexOf(task) } as any}
+                >
                   <Link href={`/verkefni/${task.id}`}>
                     <div className="px-6 py-4 hover:bg-gray-50 flex justify-between items-center">
                       <div>
                         <div className="flex items-center">
-                          <span className={`${task.completed ? "line-through text-gray-500" : "font-medium"}`}>
+                          <span
+                            className={`${
+                              task.completed
+                                ? "line-through text-gray-500"
+                                : "font-medium"
+                            }`}
+                          >
                             {task.title}
                           </span>
                           {task.completed && (
@@ -108,9 +176,9 @@ export default function TasksPage() {
                             </span>
                           )}
                         </div>
-                        {task.category_name && (
+                        {task.category_id && (
                           <span className="text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded mt-1 inline-block">
-                            {task.category_name}
+                            {task.category_name || getCategoryName(task.category_id)}
                           </span>
                         )}
                       </div>

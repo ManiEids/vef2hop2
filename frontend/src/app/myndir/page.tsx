@@ -12,7 +12,13 @@ export default function ImagesPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null);
-  const [uploadPreset, setUploadPreset] = useState("verkefnalisti");
+  const [uploadPreset, setUploadPreset] = useState(() => {
+    // Try to get from localStorage first, otherwise use default
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem("cloudinary_upload_preset") || "ml_default";
+    }
+    return "ml_default";
+  });
   
   const { user } = useAuth();
 
@@ -59,7 +65,7 @@ export default function ImagesPage() {
       return;
     }
     
-    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "dojqamm7u";
     if (!cloudName) {
       setError("Cloudinary stillingar vantar");
       return;
@@ -89,7 +95,7 @@ export default function ImagesPage() {
         
         // Handle common errors more specifically
         if (errorText.includes("Upload preset not found")) {
-          throw new Error(`Upload preset '${uploadPreset}' fannst ekki. Búðu til upload preset í Cloudinary stjórnborðinu.`);
+          throw new Error(`Upload preset '${uploadPreset}' fannst ekki. Vinsamlegast notaðu ml_default eða annan gildandi preset.`);
         }
         
         throw new Error(`Villa við upphleðslu: ${response.status} - ${errorText}`);

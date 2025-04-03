@@ -4,11 +4,11 @@ import { MockAuthService, MockTaskService, MockCategoryService, MockTagService }
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 // Færanlegt flag til að nota mökk í staðinn fyrir bakenda
 const MOCKED_FEATURES = {
-  AUTH: false,      // Reyna að nota bakenda fyrir innskráningu
-  TASKS: false,     // Reyna að nota bakenda fyrir verkefni
-  CATEGORIES: false, // Reyna að nota bakenda fyrir flokka
-  TAGS: false,       // Reyna að nota bakenda fyrir tög
-  CLOUDINARY: true  // Nota beina Cloudinary upphleðslu í framenda
+  AUTH: true,      // Use mock authentication
+  TASKS: true,     // Use mock tasks
+  CATEGORIES: true, // Use mock categories
+  TAGS: true,       // Use mock tags
+  CLOUDINARY: true  // Direct Cloudinary upload (always enabled for Vercel compatibility)
 };
 
 // Hjálparfall fyrir API köll

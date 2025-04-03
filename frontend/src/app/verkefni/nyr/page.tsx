@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { TaskService, CategoryService } from "@/services/api";
 import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
+import ImageUploader from "@/components/ImageUploader";
 
 interface Category {
   id: string;
@@ -177,6 +178,27 @@ export default function NewTask() {
         </div>
         
         <div className="mb-4">
+          <label className="block text-gray-700 font-medium mb-2">
+            Mynd
+          </label>
+          <ImageUploader initialImageUrl={imageUrl} onImageSelected={setImageUrl} />
+        </div>
+        
+        <div className="mb-4">
+          <label htmlFor="imageUrl" className="block text-gray-700 font-medium mb-2">
+            eða slóð á mynd
+          </label>
+          <input
+            type="url"
+            id="imageUrl"
+            value={imageUrl}
+            onChange={(e) => setImageUrl(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="https://..."
+          />
+        </div>
+        
+        <div className="mb-4">
           <label htmlFor="tags" className="block text-gray-700 font-medium mb-2">
             Merki (aðgreind með kommu)
           </label>
@@ -188,25 +210,6 @@ export default function NewTask() {
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             placeholder="t.d. mikilvægt, skóli, verkefni"
           />
-        </div>
-        
-        <div className="mb-4">
-          <label htmlFor="imageUrl" className="block text-gray-700 font-medium mb-2">
-            Slóð á mynd
-          </label>
-          <input
-            type="url"
-            id="imageUrl"
-            value={imageUrl}
-            onChange={(e) => setImageUrl(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="https://..."
-          />
-          <p className="mt-1 text-sm text-gray-500">
-            Veldu mynd í gegnum{" "}
-            <Link href="/myndir" className="text-blue-500 hover:underline">myndasíðuna</Link>{" "}
-            eða settu inn slóð á mynd
-          </p>
         </div>
         
         <div className="mb-6">
