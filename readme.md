@@ -37,7 +37,7 @@ Til að leysa þessar áskoranir:
 - **Nýskráning**: Notendur geta búið til aðgang
 - **Stjórnendaaðgangur**: Sér virkni fyrir stjórnendur
 
-## Tæknistakur
+## Tækni
 
 Verkefnið er byggt upp með:
 - **Next.js**: App Router (server-side rendering)
@@ -66,7 +66,7 @@ npm run dev
 - **Stjórnandi**: notandanafn: `admin`, lykilorð: `admin`
 - **Almennur notandi**: notandanafn: `user`, lykilorð: `user`
 
-## Vinna að verkefninu
+## Vinna 
 
 Verkefnið var unnið í þrepum:
 
