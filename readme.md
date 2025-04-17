@@ -9,7 +9,7 @@ Verkefnalisti er vefforrit sem gerir notendum kleift að halda utan um verkefni 
 Þetta verkefni byggir á fyrri skilum (hópverkefni 1) sem bakenda. Ég lenti í nokkrum áskorunum:
 
 - Bakendinn var ekki fullkominn og sum API köll virkuðu ekki eins og búist var við
-- Mynda virkni var ekki hluti af upprunalega bakendanum og þurfti að bæta því við
+- Mynda virkni var ekki hluti af upprunalega bakendanum -cloudinary notað
 - Cloudinary upphleðsla krafðist sérsniðins kóða til að virka með Next.js
 - Ýmis smáatriði og villur í upprunalega bakendanum þurftu sérstaka meðhöndlun
 
